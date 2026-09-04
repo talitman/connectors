@@ -31,6 +31,28 @@ describe('server basics', () => {
     expect(wrong.statusCode).toBe(401);
   });
 
+  it('returns a JSON 400 for malformed and empty JSON bodies', async () => {
+    const { app } = buildTestApp();
+    const bad = await app.inject({
+      method: 'POST',
+      url: '/instances',
+      payload: '{not json',
+      headers: { 'content-type': 'application/json' },
+    });
+    expect(bad.statusCode).toBe(400);
+    const body = bad.json<{ error: { code: string; retryable: boolean } }>();
+    expect(body.error.retryable).toBe(false);
+    expect(body.error.code).not.toBe('INTERNAL');
+
+    const empty = await app.inject({
+      method: 'POST',
+      url: '/instances',
+      payload: '',
+      headers: { 'content-type': 'application/json' },
+    });
+    expect(empty.statusCode).toBe(400);
+  });
+
   it('returns a JSON 404 for unknown routes', async () => {
     const { app } = buildTestApp();
     const res = await app.inject({ method: 'GET', url: '/nope' });

@@ -5,6 +5,8 @@ import type { InstanceDefinition } from './instance.js';
 export function createPublisherFactory(
   config: Partial<Pick<ServiceConfig, 'WEBHOOK_URL' | 'WEBHOOK_SECRET'>>,
   logger: Logger,
+  /** Injected in tests so webhook delivery never touches the network. */
+  fetchFn?: typeof fetch,
 ): (definition: InstanceDefinition) => EventPublisher | undefined {
   return (definition) => {
     const url = definition.webhook?.url ?? config.WEBHOOK_URL;
@@ -13,6 +15,7 @@ export function createPublisherFactory(
     return createWebhookPublisher({
       url,
       ...(secret ? { secret } : {}),
+      ...(fetchFn ? { fetch: fetchFn } : {}),
       logger: logger.child({ instanceId: definition.id }),
     });
   };

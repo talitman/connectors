@@ -1,4 +1,5 @@
 import Fastify, {
+  LogController,
   type FastifyInstance,
   type RawReplyDefaultExpression,
   type RawRequestDefaultExpression,
@@ -30,7 +31,10 @@ export type WhatsAppServiceApp = FastifyInstance<
 >;
 
 export function buildServer(deps: ServerDeps): WhatsAppServiceApp {
-  const app = Fastify({ loggerInstance: deps.logger, disableRequestLogging: true });
+  const app = Fastify({
+    loggerInstance: deps.logger,
+    logController: new LogController({ disableRequestLogging: true }),
+  });
 
   app.addHook('onRequest', apiKeyHook(deps.config.API_KEY));
 

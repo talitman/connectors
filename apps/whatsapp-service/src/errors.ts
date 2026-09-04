@@ -50,12 +50,28 @@ const CONNECTOR_STATUS: Record<string, number> = {
   CONFIG_INVALID: 400,
 };
 
+/** Fastify body-parser and routing errors carry a 4xx `statusCode` and a `FST_ERR_*` code. */
+function clientError(err: unknown): HttpError | undefined {
+  if (typeof err !== 'object' || err === null) return undefined;
+  const { statusCode, code, message } = err as {
+    statusCode?: unknown;
+    code?: unknown;
+    message?: unknown;
+  };
+  if (typeof statusCode !== 'number' || statusCode < 400 || statusCode > 499) return undefined;
+  return new HttpError(
+    statusCode,
+    typeof code === 'string' ? code : 'BAD_REQUEST',
+    typeof message === 'string' ? message : 'Bad request',
+  );
+}
+
 export function toHttpError(err: unknown): HttpError {
   if (err instanceof HttpError) return err;
   if (err instanceof ConnectorError) {
     return new HttpError(CONNECTOR_STATUS[err.code] ?? 500, err.code, err.message, err.retryable);
   }
-  return new HttpError(500, 'INTERNAL', 'Internal error');
+  return clientError(err) ?? new HttpError(500, 'INTERNAL', 'Internal error');
 }
 
 export function parseWith<T extends z.ZodType>(schema: T, value: unknown): z.infer<T> {

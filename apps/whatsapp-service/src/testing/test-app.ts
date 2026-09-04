@@ -2,6 +2,7 @@ import { MemoryStore, noopLogger } from '@connectors/core';
 import { createPinoLogger } from '@connectors/observability';
 import { loadServiceConfig } from '../config.js';
 import { InstanceManager } from '../instance-manager.js';
+import { createPublisherFactory } from '../publishers.js';
 import { buildServer, type WhatsAppServiceApp } from '../server.js';
 import { FakeWhatsAppConnector } from './fake-connector.js';
 
@@ -17,7 +18,11 @@ export interface TestApp {
   connectors: Map<string, FakeWhatsAppConnector>;
 }
 
-/** Builds a real InstanceManager (in-memory store, fake connectors, no publisher) behind a real server. */
+/**
+ * Builds a real InstanceManager (in-memory store, fake connectors) behind a real server.
+ * With `fetch` injected the real webhook publisher is wired up against that fetch, so the
+ * connector -> publisher -> webhook path is exercised without touching the network.
+ */
 export function buildTestApp(options: TestAppOptions = {}): TestApp {
   const connectors = new Map<string, FakeWhatsAppConnector>();
   const manager = new InstanceManager({
@@ -28,7 +33,9 @@ export function buildTestApp(options: TestAppOptions = {}): TestApp {
       connectors.set(definition.id, connector);
       return connector;
     },
-    publisherFactory: () => undefined,
+    publisherFactory: options.fetch
+      ? createPublisherFactory({}, noopLogger, options.fetch)
+      : () => undefined,
   });
   const app = buildServer({
     manager,

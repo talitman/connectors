@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { buildTestApp } from '../testing/test-app.js';
+import { MAX_MEDIA_BYTES } from './messages.js';
 
 async function setup(fetchImpl?: typeof fetch) {
   const { app, manager, connectors } = buildTestApp(fetchImpl ? { fetch: fetchImpl } : {});
@@ -114,6 +115,52 @@ describe('POST /instances/:id/messages', () => {
     });
     expect(bad.statusCode).toBe(400);
     expect(bad.json()).toMatchObject({ error: { code: 'MEDIA_FETCH_FAILED' } });
+  });
+
+  it('rejects non-http(s) media urls without fetching them', async () => {
+    const fetchImpl = vi.fn(() =>
+      Promise.resolve(new Response('x', { status: 200 })),
+    ) as unknown as typeof fetch;
+    const { app } = await setup(fetchImpl);
+    const res = await app.inject({
+      method: 'POST',
+      url: '/instances/main/messages',
+      payload: {
+        to: 'x',
+        type: 'document',
+        mimetype: 'application/pdf',
+        url: 'ftp://files.test/a.pdf',
+        fileName: 'a.pdf',
+      },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toMatchObject({ error: { code: 'MEDIA_FETCH_FAILED' } });
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('rejects media whose content-length exceeds the cap', async () => {
+    const fetchImpl = vi.fn(() =>
+      Promise.resolve(
+        new Response('x', {
+          status: 200,
+          headers: { 'content-length': String(MAX_MEDIA_BYTES + 1) },
+        }),
+      ),
+    ) as unknown as typeof fetch;
+    const { app } = await setup(fetchImpl);
+    const res = await app.inject({
+      method: 'POST',
+      url: '/instances/main/messages',
+      payload: {
+        to: 'x',
+        type: 'document',
+        mimetype: 'application/pdf',
+        url: 'https://files.test/big.pdf',
+        fileName: 'big.pdf',
+      },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toMatchObject({ error: { code: 'MEDIA_FETCH_FAILED' } });
   });
 
   it('returns 409 when the instance is not connected', async () => {

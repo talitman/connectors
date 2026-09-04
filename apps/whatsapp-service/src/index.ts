@@ -15,6 +15,14 @@ async function main(): Promise<void> {
   });
   const store = new FileStore(config.DATA_DIR);
 
+  const LOOPBACK = new Set(['127.0.0.1', 'localhost', '::1']);
+  if (!config.API_KEY && !LOOPBACK.has(config.HOST)) {
+    logger.warn(
+      { host: config.HOST },
+      'API_KEY is not set and HOST is not loopback: the API is reachable without authentication',
+    );
+  }
+
   const manager = new InstanceManager({
     store,
     logger,
@@ -46,7 +54,10 @@ async function main(): Promise<void> {
       await app.close();
       await manager.shutdown();
       process.exit(0);
-    })();
+    })().catch((err: unknown) => {
+      logger.error({ err }, 'shutdown failed');
+      process.exit(1);
+    });
   };
   process.on('SIGINT', () => shutdown('SIGINT'));
   process.on('SIGTERM', () => shutdown('SIGTERM'));

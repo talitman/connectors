@@ -71,6 +71,30 @@ describe('InstanceManager', () => {
     await expect(manager.create({ id: 'dup' })).rejects.toMatchObject({ statusCode: 409 });
   });
 
+  it('reserves the id so concurrent creates yield exactly one 409', async () => {
+    const { manager } = setup();
+    const results = await Promise.allSettled([
+      manager.create({ id: 'dup', autoConnect: false }),
+      manager.create({ id: 'dup', autoConnect: false }),
+    ]);
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    const rejected = results.filter((r) => r.status === 'rejected');
+    expect(rejected).toHaveLength(1);
+    expect(rejected[0]!.reason).toMatchObject({ statusCode: 409 });
+    expect(manager.list().map((i) => i.definition.id)).toEqual(['dup']);
+  });
+
+  it('skips corrupt definitions during restore', async () => {
+    const store = new MemoryStore();
+    const first = setup(store);
+    await first.manager.create({ id: 'good', autoConnect: false });
+    await store.set('instances/bad/definition', new TextEncoder().encode('{not json'));
+
+    const second = setup(store);
+    await second.manager.restore();
+    expect(second.manager.list().map((i) => i.definition.id)).toEqual(['good']);
+  });
+
   it('forwards connector events to the publisher', async () => {
     const { manager, connectors, published } = setup();
     await manager.create({ id: 'main', webhook: { url: 'https://h.test/x' } });

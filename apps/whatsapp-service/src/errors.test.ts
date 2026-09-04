@@ -20,6 +20,13 @@ describe('toHttpError', () => {
     ],
     [new ConnectorError('x', { code: 'SOMETHING', retryable: true }), 500, 'SOMETHING'],
     [new Error('plain'), 500, 'INTERNAL'],
+    [
+      { statusCode: 400, code: 'FST_ERR_CTP_INVALID_JSON_BODY', message: 'Unexpected token n' },
+      400,
+      'FST_ERR_CTP_INVALID_JSON_BODY',
+    ],
+    [{ statusCode: 400, message: 'Body cannot be empty' }, 400, 'BAD_REQUEST'],
+    [{ statusCode: 500, code: 'FST_ERR_SOMETHING', message: 'boom' }, 500, 'INTERNAL'],
   ])('%s -> %i %s', (err, status, code) => {
     const http = toHttpError(err);
     expect(http.statusCode).toBe(status);
