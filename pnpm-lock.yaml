@@ -71,6 +71,28 @@ importers:
         specifier: 4.23.13
         version: 4.23.13
 
+  examples/whatsapp-basic:
+    dependencies:
+      '@connectors/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@connectors/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
+      '@connectors/whatsapp':
+        specifier: workspace:*
+        version: link:../../packages/whatsapp
+      qrcode-terminal:
+        specifier: 0.12.0
+        version: 0.12.0
+    devDependencies:
+      '@types/qrcode-terminal':
+        specifier: 0.12.2
+        version: 0.12.2
+      tsx:
+        specifier: 4.23.13
+        version: 4.23.13
+
   packages/config:
     dependencies:
       '@connectors/core':
@@ -555,6 +577,9 @@ packages:
 
   '@types/node@26.4.1':
     resolution: {integrity: sha512-k97ENvZWtvA6yqz5/FS6a7duDgOPEeOQOc2iKS/nY6mX6qJUKtLnWzQS+Xj6tXweyj6ZcTAK2Qecetnvi9nCLA==}
+
+  '@types/qrcode-terminal@0.12.2':
+    resolution: {integrity: sha512-v+RcIEJ+Uhd6ygSQ0u5YYY7ZM+la7GgPbs0V/7l/kFs2uO4S8BcIUEMoP7za4DNIqNnUD5npf0A/7kBhrCKG5Q==}
 
   '@types/qrcode@1.5.6':
     resolution: {integrity: sha512-te7NQcV2BOvdj2b1hCAHzAoMNuj65kNBMz0KBaxM6c3VGBOhU0dURQKOtH8CFNI/dsKkwlv32p26qYQTWoB5bw==}
@@ -1253,6 +1278,10 @@ packages:
     resolution: {integrity: sha512-+Owyggi9IxT1ePKGafcI87ubSmxol6smwJ+RAHDQlx9+9cPwFWDiKFFCPuWhr9ignlGpZ9vDQLw67N4dcTVFEA==}
     engines: {node: '>=20'}
 
+  qrcode-terminal@0.12.0:
+    resolution: {integrity: sha512-EXtzRZmC+YGmGlDFbXKxQiMZNwCLEO6BANKXG4iCtSIM0yqc/pappSx3RIKr4r0uh5JsBckOXeKrB3Iz7mdQpQ==}
+    hasBin: true
+
   qrcode@1.5.4:
     resolution: {integrity: sha512-1ca71Zgiu6ORjHqFBDpnSMTR2ReToX4l1Au1VFLyVeBTFavzQnv5JxMFr3ukHVKpSrSA2MCk0lNJSykjUfz7Zg==}
     engines: {node: '>=10.13.0'}
@@ -1876,6 +1905,8 @@ snapshots:
   '@types/node@26.4.1':
     dependencies:
       undici-types: 8.3.0
+
+  '@types/qrcode-terminal@0.12.2': {}
 
   '@types/qrcode@1.5.6':
     dependencies:
@@ -2638,6 +2669,8 @@ snapshots:
   qified@0.10.1:
     dependencies:
       hookified: 2.2.0
+
+  qrcode-terminal@0.12.0: {}
 
   qrcode@1.5.4:
     dependencies:

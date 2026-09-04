@@ -1,0 +1,23 @@
+{
+  "name": "@connectors/example-whatsapp-basic",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@connectors/core": "workspace:*",
+    "@connectors/observability": "workspace:*",
+    "@connectors/whatsapp": "workspace:*",
+    "qrcode-terminal": "0.12.0"
+  },
+  "devDependencies": {
+    "@types/qrcode-terminal": "0.12.2",
+    "tsx": "4.23.13"
+  }
+}
