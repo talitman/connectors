@@ -69,9 +69,10 @@ export function mapDisconnectError(
         cause,
       });
     default:
+      // policyFor() reconnects with backoff on unknown codes, so the error must say retryable.
       return new ConnectorError(`WhatsApp connection closed with status ${statusCode}`, {
         code: 'UNKNOWN',
-        retryable: false,
+        retryable: true,
         cause,
         details: { statusCode },
       });

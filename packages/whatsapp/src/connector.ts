@@ -48,6 +48,9 @@ class WhatsAppConnectorImpl implements WhatsAppConnector {
   private readonly dedupe: EventDeduplicator;
   private readonly cache: RawMessageCache;
   private readonly subscribers = new Set<EventHandler<WhatsAppEvent>>();
+  /** Monotonic suffix so two status transitions in the same millisecond get distinct event ids. */
+  private connectionSeq = 0;
+  private duplicatesDropped = 0;
 
   constructor(
     private readonly options: ResolvedOptions,
@@ -72,7 +75,11 @@ class WhatsAppConnectorImpl implements WhatsAppConnector {
       ...(internals.random ? { random: internals.random } : {}),
     });
     this.manager.onStatus((status) => this.emitStatus(status));
-    this.client.on('messages', (batch) => void this.handleBatch(batch));
+    this.client.on('messages', (batch) => {
+      void this.handleBatch(batch).catch((err: unknown) =>
+        this.logger.error({ err }, 'message batch handling failed'),
+      );
+    });
   }
 
   subscribe(handler: EventHandler<WhatsAppEvent>): Unsubscribe {
@@ -154,6 +161,7 @@ class WhatsAppConnectorImpl implements WhatsAppConnector {
       ...status,
       detail: {
         ...status.detail,
+        duplicatesDropped: this.duplicatesDropped,
         ...(self ? { selfId: self } : {}),
         ...(phone ? { phoneNumber: phone } : {}),
       },
@@ -176,11 +184,14 @@ class WhatsAppConnectorImpl implements WhatsAppConnector {
   }
 
   private async handleBatch(batch: ClientMessageBatch): Promise<void> {
+    // A socket created by an in-flight start() can outlive a disconnect()/logout(); ignore it.
+    if (this.manager.isStopped()) return;
     if (batch.type === 'append' && !this.options.includeHistory) return;
     for (const raw of batch.messages) {
       const id = raw.key.id;
       if (!id) continue;
       if (this.dedupe.isDuplicate(`${this.accountId}:${id}`)) {
+        this.duplicatesDropped += 1;
         this.logger.debug({ messageId: id }, 'duplicate message dropped');
         continue;
       }
@@ -213,16 +224,17 @@ class WhatsAppConnectorImpl implements WhatsAppConnector {
 
   private emitStatus(status: ConnectorStatus): void {
     const full = this.withIdentity(status);
+    const externalId = `${full.since.toISOString()}#${this.connectionSeq++}`;
     void this.dispatch({
       id: buildEventId({
         connector: 'whatsapp',
         accountId: this.accountId,
         type: 'connection.updated',
-        externalId: full.since.toISOString(),
+        externalId,
       }),
       connector: 'whatsapp',
       accountId: this.accountId,
-      externalId: full.since.toISOString(),
+      externalId,
       type: 'connection.updated',
       timestamp: full.since,
       receivedAt: new Date(),

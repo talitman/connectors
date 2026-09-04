@@ -1,6 +1,6 @@
 import { Readable } from 'node:stream';
 import { MemoryStore, noopLogger } from '@connectors/core';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { RawMessage } from './client/types.js';
 import { createConnectorWithClient } from './connector.js';
 import { NotConnectedError } from './errors.js';
@@ -55,6 +55,10 @@ async function connected(overrides: Partial<WhatsAppConnectorOptions> = {}) {
 }
 
 describe('WhatsApp connector', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('exposes identity and forwards lifecycle to the client', async () => {
     const { connector, client } = setup();
     expect(connector.name).toBe('whatsapp');
@@ -86,6 +90,50 @@ describe('WhatsApp connector', () => {
       payload: { state: 'connected' },
     });
     expect((await connector.getStatus()).detail).toMatchObject({ phoneNumber: '972509999999' });
+  });
+
+  it('gives connection.updated events distinct ids inside one millisecond', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+    const { connector, client, events } = setup();
+    await connector.connect();
+    client.emitOpen();
+    await flush();
+    const updates = events.filter((e) => e.type === 'connection.updated');
+    expect(updates).toHaveLength(2);
+    expect(updates.map((e) => e.externalId)).toEqual([
+      '2026-01-01T00:00:00.000Z#0',
+      '2026-01-01T00:00:00.000Z#1',
+    ]);
+    expect(new Set(updates.map((e) => e.id)).size).toBe(2);
+    expect(updates[1]!.id).toBe('whatsapp:acct:connection.updated:2026-01-01T00:00:00.000Z#1');
+  });
+
+  it('counts dropped duplicates in getStatus detail', async () => {
+    const { client, connector } = await connected();
+    expect((await connector.getStatus()).detail).toMatchObject({ duplicatesDropped: 0 });
+    client.emitMessages([text('M1'), text('M1')]);
+    await flush();
+    expect((await connector.getStatus()).detail).toMatchObject({ duplicatesDropped: 1 });
+  });
+
+  it('ignores message batches that land after a manual disconnect', async () => {
+    const { client, connector, messages } = setup();
+    let release = (): void => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    client.startImpl = () => gate;
+
+    const connecting = connector.connect();
+    await connector.disconnect();
+    release();
+    await connecting;
+    await flush();
+
+    client.emitMessages([text('M1')]);
+    await flush();
+    expect(messages()).toHaveLength(0);
   });
 
   it('emits normalized message.received without raw by default', async () => {

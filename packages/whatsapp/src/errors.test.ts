@@ -14,7 +14,7 @@ describe('mapDisconnectError', () => {
     [428, undefined, 'CONNECTION_LOST', true],
     [503, undefined, 'CONNECTION_LOST', true],
     [undefined, undefined, 'CONNECTION_LOST', true],
-    [418, undefined, 'UNKNOWN', false],
+    [418, undefined, 'UNKNOWN', true],
   ])('maps %s', (code, cls, expectedCode, retryable) => {
     const err = mapDisconnectError(code, new Error('x'));
     if (cls) expect(err).toBeInstanceOf(cls);

@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { once } from 'node:events';
 import { createWriteStream } from 'node:fs';
 import { mkdir, rename, unlink } from 'node:fs/promises';
 import { dirname } from 'node:path';
@@ -65,6 +66,8 @@ export async function streamToFile(
   let bytes = 0;
   try {
     const out = createWriteStream(partial, { mode: 0o600 });
+    // createWriteStream opens lazily; wait for the fd so cleanup cannot race the open.
+    await once(out, 'open');
     stream.on('data', (chunk: Buffer | string) => {
       bytes += Buffer.byteLength(chunk);
     });

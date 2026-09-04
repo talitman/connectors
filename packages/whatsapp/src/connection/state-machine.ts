@@ -53,6 +53,11 @@ export class ConnectionManager {
     return this.pairing;
   }
 
+  /** True between disconnect()/logout() and the next connect(). */
+  isStopped(): boolean {
+    return this.manualStop;
+  }
+
   onStatus(listener: (status: ConnectorStatus) => void): Unsubscribe {
     this.statusListeners.add(listener);
     return () => this.statusListeners.delete(listener);

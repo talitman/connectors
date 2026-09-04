@@ -9,6 +9,7 @@ import makeWASocket, {
   proto,
   type AnyMessageContent,
   type AuthenticationCreds,
+  type BaileysEventMap,
   type SignalDataSet,
   type SignalDataTypeMap,
   type SignalKeyStore,
@@ -44,6 +45,12 @@ export class BaileysClient implements WhatsAppClient {
   private readonly options: ResolvedOptions;
   private sock: WASocket | undefined;
   private creds: AuthenticationCreds | undefined;
+  /** Bumped by every stop(); a start() whose generation is stale abandons its socket. */
+  private generation = 0;
+  /** Serialized creds writes, so start()/stop() can await the last one. */
+  private pendingSave: Promise<void> = Promise.resolve();
+  /** Removes exactly the listeners we registered, leaving Baileys' internal ones alone. */
+  private detach: (() => void) | undefined;
 
   constructor(ctx: { logger: Logger; options: ResolvedOptions }) {
     this.logger = ctx.logger.child({ component: 'baileys-client' });
@@ -59,7 +66,12 @@ export class BaileysClient implements WhatsAppClient {
 
   async start(auth: AuthStore): Promise<void> {
     await this.stop();
+    await this.pendingSave;
+    // stop() has already bumped the generation; anything that bumps it again wins over us.
+    const generation = this.generation;
+
     const creds = ((await auth.loadCreds()) as AuthenticationCreds | undefined) ?? initAuthCreds();
+    if (generation !== this.generation) return;
     this.creds = creds;
 
     const keys: SignalKeyStore = {
@@ -81,6 +93,7 @@ export class BaileysClient implements WhatsAppClient {
     const version = this.options.fetchLatestVersion
       ? (await fetchLatestBaileysVersion()).version
       : this.options.waWebVersion;
+    if (generation !== this.generation) return;
 
     const sock = makeWASocket({
       auth: { creds, keys: makeCacheableSignalKeyStore(keys, this.providerLogger) },
@@ -92,15 +105,19 @@ export class BaileysClient implements WhatsAppClient {
       generateHighQualityLinkPreview: false,
       getMessage: () => Promise.resolve(undefined),
     });
+    if (generation !== this.generation) {
+      await this.endSocket(sock);
+      return;
+    }
     this.sock = sock;
 
-    sock.ev.on('creds.update', () => {
-      auth
-        .saveCreds(creds as unknown as Record<string, unknown>)
+    const onCreds = (): void => {
+      this.pendingSave = this.pendingSave
+        .then(() => auth.saveCreds(creds as unknown as Record<string, unknown>))
         .then(() => this.emitter.emit('creds', undefined))
         .catch((err: unknown) => this.logger.error({ err }, 'failed to persist credentials'));
-    });
-    sock.ev.on('connection.update', (update) => {
+    };
+    const onConnection = (update: BaileysEventMap['connection.update']): void => {
       if (update.qr) this.emitter.emit('qr', update.qr);
       if (!update.connection) return;
       const error = update.lastDisconnect?.error;
@@ -111,20 +128,35 @@ export class BaileysClient implements WhatsAppClient {
         ...(error ? { error } : {}),
         ...(update.isNewLogin === undefined ? {} : { isNewLogin: update.isNewLogin }),
       });
-    });
-    sock.ev.on('messages.upsert', ({ messages, type }) => {
+    };
+    const onMessages = ({ messages, type }: BaileysEventMap['messages.upsert']): void => {
       // WAMessage is a superset of RawMessage; the cast narrows to the fields this package reads.
       this.emitter.emit('messages', { messages: messages as unknown as RawMessage[], type });
-    });
+    };
+
+    sock.ev.on('creds.update', onCreds);
+    sock.ev.on('connection.update', onConnection);
+    sock.ev.on('messages.upsert', onMessages);
+    // removeAllListeners would also strip Baileys' own internal handlers.
+    this.detach = () => {
+      sock.ev.off('creds.update', onCreds);
+      sock.ev.off('connection.update', onConnection);
+      sock.ev.off('messages.upsert', onMessages);
+    };
   }
 
   async stop(): Promise<void> {
+    this.generation += 1;
+    await this.pendingSave;
     const sock = this.sock;
     if (!sock) return;
     this.sock = undefined;
-    sock.ev.removeAllListeners('connection.update');
-    sock.ev.removeAllListeners('creds.update');
-    sock.ev.removeAllListeners('messages.upsert');
+    this.detach?.();
+    this.detach = undefined;
+    await this.endSocket(sock);
+  }
+
+  private async endSocket(sock: WASocket): Promise<void> {
     try {
       await sock.end(undefined);
     } catch (err) {
