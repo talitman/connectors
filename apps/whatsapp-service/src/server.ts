@@ -11,11 +11,14 @@ import { HttpError, NotFoundError, toHttpError } from './errors.js';
 import type { InstanceManager } from './instance-manager.js';
 import { healthRoutes } from './routes/health.js';
 import { instanceRoutes } from './routes/instances.js';
+import { mediaRoutes } from './routes/media.js';
+import { messageRoutes } from './routes/messages.js';
 
 export interface ServerDeps {
   manager: InstanceManager;
   config: ServiceConfig;
   logger: PinoLogger;
+  fetch?: typeof fetch;
 }
 
 /** FastifyInstance parametrized with the pino logger createPinoLogger returns (loggerInstance option). */
@@ -45,7 +48,8 @@ export function buildServer(deps: ServerDeps): WhatsAppServiceApp {
 
   healthRoutes(app, deps.manager);
   instanceRoutes(app, deps);
-  // messageRoutes(app, deps); mediaRoutes(app, deps) — Task 18
+  messageRoutes(app, { manager: deps.manager, ...(deps.fetch ? { fetch: deps.fetch } : {}) });
+  mediaRoutes(app, { manager: deps.manager });
 
   return app;
 }

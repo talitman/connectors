@@ -7,7 +7,7 @@ import { FakeWhatsAppConnector } from './fake-connector.js';
 
 export interface TestAppOptions {
   env?: Record<string, string>;
-  /** Reserved for later tasks that exercise webhook delivery; unused while publisherFactory always returns undefined. */
+  /** Injected into buildServer; used by routes that call out over HTTP (media-by-url, webhooks). */
   fetch?: typeof fetch;
 }
 
@@ -34,6 +34,7 @@ export function buildTestApp(options: TestAppOptions = {}): TestApp {
     manager,
     config: loadServiceConfig(options.env ?? {}),
     logger: createPinoLogger({ level: 'silent' }),
+    ...(options.fetch ? { fetch: options.fetch } : {}),
   });
   return { app, manager, connectors };
 }
