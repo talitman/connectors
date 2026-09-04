@@ -186,6 +186,19 @@ describe('ConnectionManager', () => {
     expect(client.calls.start).toBe(1);
   });
 
+  it('cancels a pending reconnect timer when a later close is terminal', async () => {
+    const { client, manager } = setup();
+    await manager.connect();
+    client.emitClose(428); // schedules a 100ms backoff timer
+    await flush();
+    client.emitClose(401); // terminal, arrives before the timer fires
+    await flush();
+    expect(manager.getStatus().state).toBe('logged_out');
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(client.calls.start).toBe(1);
+    expect(manager.getStatus().state).toBe('logged_out');
+  });
+
   it('logout() unlinks, clears auth and lands in logged_out', async () => {
     const { client, manager, store } = setup();
     await store.set('creds', new Uint8Array([1]));

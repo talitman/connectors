@@ -144,13 +144,16 @@ export class ConnectionManager {
         this.setState('connected');
         return;
       case 'close':
-        void this.handleClose(update.statusCode, update.error);
+        this.handleClose(update.statusCode, update.error).catch((err: unknown) => {
+          this.logger.error({ err }, 'unhandled error in handleClose');
+        });
         return;
     }
   }
 
   private async handleClose(statusCode: number | undefined, cause: unknown): Promise<void> {
     if (this.manualStop) return;
+    this.clearTimer();
     const error = mapDisconnectError(statusCode, cause);
     const policy = policyFor(statusCode);
     this.pairing = null;
@@ -170,10 +173,11 @@ export class ConnectionManager {
         }
         this.setState('reconnecting', error);
         const delay = this.backoff.delayFor(this.attempt);
-        this.clearTimer();
         this.reconnectTimer = setTimeout(() => {
           this.reconnectTimer = undefined;
-          void this.restart();
+          this.restart().catch((err: unknown) => {
+            this.logger.error({ err }, 'unhandled error in restart');
+          });
         }, delay);
         return;
       }
