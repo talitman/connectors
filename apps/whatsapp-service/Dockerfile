@@ -21,4 +21,6 @@ RUN mkdir -p /data && chown -R app:app /data
 USER app
 VOLUME ["/data"]
 EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:3000/health || exit 1
 CMD ["node", "apps/whatsapp-service/dist/index.js"]

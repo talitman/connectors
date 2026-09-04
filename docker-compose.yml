@@ -11,5 +11,8 @@ services:
       # WEBHOOK_URL: https://example.com/webhooks/whatsapp
       # WEBHOOK_SECRET: change-me
     volumes:
-      - ./data:/data
+      - whatsapp-data:/data
     restart: unless-stopped
+
+volumes:
+  whatsapp-data:

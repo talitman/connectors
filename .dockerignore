@@ -4,3 +4,5 @@
 **/data
 **/downloads
 .git
+**/.env
+**/.env.*
