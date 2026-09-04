@@ -1,0 +1,17 @@
+packages:
+  - 'packages/*'
+  - 'apps/*'
+  - 'examples/*'
+
+autoInstallPeers: false
+peerDependencyRules:
+  ignoreMissing:
+    - sharp
+    - jimp
+    - audio-decode
+    - link-preview-js
+onlyBuiltDependencies:
+  - baileys
+overrides:
+  zod: 4.5.4
+  pino: 10.3.1
