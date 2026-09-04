@@ -10,8 +10,9 @@ peerDependencyRules:
     - jimp
     - audio-decode
     - link-preview-js
-onlyBuiltDependencies:
-  - baileys
 overrides:
   zod: 4.5.4
   pino: 10.3.1
+allowBuilds:
+  baileys: true
+  protobufjs: false
