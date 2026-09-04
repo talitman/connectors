@@ -25,3 +25,6 @@ export { assertValidKey, assertValidPrefix, jsonCodec, namespaced } from './stor
 export type { KeyValueStore, SecretStore, StateStore } from './storage/store.js';
 export { MemoryStore } from './storage/memory-store.js';
 export { FileStore, decodeSegment, encodeSegment } from './storage/file-store.js';
+export type { EventPublisher } from './publishers/publisher.js';
+export { createWebhookPublisher, signWebhookBody } from './publishers/webhook.js';
+export type { WebhookPublisherOptions } from './publishers/webhook.js';
