@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/require-await -- test assigns async functions that resolve synchronously */
 import { mkdtemp, readdir, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -50,12 +51,12 @@ describe('openMediaStream', () => {
     const cache = new RawMessageCache({ maxEntries: 5, ttlMs: 1000 });
     cache.set('M1', mediaRaw());
     let calls = 0;
-    client.downloadImpl = (d) => {
+    client.downloadImpl = async (d) => {
       calls++;
       if (d.directPath === '/p1') throw new MediaUnavailableError('expired', 'gone');
-      return Promise.resolve(Readable.from([Buffer.from('fresh')]));
+      return Readable.from([Buffer.from('fresh')]);
     };
-    client.reuploadImpl = () => Promise.resolve(mediaRaw('M1', '/p2'));
+    client.reuploadImpl = async () => mediaRaw('M1', '/p2');
     const { stream } = await openMediaStream(client, mediaRaw(), cache);
     expect(await read(stream)).toBe('fresh');
     expect(calls).toBe(2);
@@ -66,7 +67,7 @@ describe('openMediaStream', () => {
   it('gives up if the reupload also fails', async () => {
     const client = new FakeWhatsAppClient();
     const cache = new RawMessageCache({ maxEntries: 5, ttlMs: 1000 });
-    client.downloadImpl = () => {
+    client.downloadImpl = async () => {
       throw new MediaUnavailableError('expired', 'gone');
     };
     await expect(openMediaStream(client, mediaRaw(), cache)).rejects.toMatchObject({
