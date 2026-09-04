@@ -55,8 +55,7 @@ connectors/
     adding-a-connector.md       how to add a new connector package
     whatsapp-service-api.md     HTTP API reference
     superpowers/specs/          this spec
-  docker-compose.yml
-  Dockerfile is in apps/whatsapp-service
+  docker-compose.yml              (Dockerfile lives in apps/whatsapp-service)
   package.json  pnpm-workspace.yaml  turbo.json  tsconfig.base.json
   eslint.config.js  .prettierrc  vitest.workspace.ts  .npmrc  .gitignore
 ```
@@ -205,7 +204,7 @@ const noopLogger: Logger;
 ### 5.8 Utilities
 
 - `exponentialBackoff({ initialMs = 1000, maxMs = 60_000, factor = 2, jitter = 0.2 })` returns `delayFor(attempt): number`.
-- `EventDeduplicator({ maxEntries = 5000, ttlMs = 10 * 60_000, now? })` with `seen(id): boolean` (returns true and records on first sight is false; i.e. `isDuplicate(id)`). Bounded LRU with TTL, no timers (expiry checked on access).
+- `EventDeduplicator({ maxEntries = 5000, ttlMs = 10 * 60_000, now? })` with `isDuplicate(id): boolean`: records the id and returns `false` on first sight, returns `true` on any later sight within the TTL. Bounded LRU with TTL, no timers (expiry checked on access).
 - `sleep(ms, signal?)`.
 
 ## 6. `@connectors/config`
@@ -231,7 +230,7 @@ Default redaction paths cover auth material and secrets: `creds`, `keys`, `authS
 
 ## 8. `@connectors/whatsapp`
 
-Runtime deps: `@connectors/core`, `baileys` (>= 7.0.0-rc14), `@hapi/boom` (for status-code typing only), `zod` (option validation). No other third-party deps. Optional peers not installed.
+Runtime deps: `@connectors/core`, `baileys` (>= 7.0.0-rc14), `zod` (option validation). Boom errors from Baileys are read structurally (`error.output.statusCode`) so no extra dependency is needed. No other third-party deps. Optional peers not installed.
 
 ### 8.1 Public API
 
