@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { FileStore } from '@connectors/core';
 import { createLogger } from '@connectors/observability';
 import { createWhatsAppConnector } from '@connectors/whatsapp';
-import * as qrcode from 'qrcode-terminal';
+import qrcode from 'qrcode-terminal';
 
 const DATA_DIR = process.env.DATA_DIR ?? './data';
 const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR ?? './downloads';
