@@ -1,32 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { loadServiceConfig } from './config.js';
-import { buildServer } from './server.js';
-import { createPinoLogger } from '@connectors/observability';
-import { FakeWhatsAppConnector } from './testing/fake-connector.js';
-
-function app(env: Record<string, string> = {}, instances: FakeWhatsAppConnector[] = []) {
-  const manager = {
-    list: () => instances.map((connector, i) => ({ definition: { id: `i${i}` }, connector })),
-  };
-  return buildServer({
-    manager,
-    config: loadServiceConfig(env),
-    logger: createPinoLogger({ level: 'silent' }),
-  });
-}
+import { buildTestApp } from './testing/test-app.js';
 
 describe('server basics', () => {
   it('reports health with instance counts', async () => {
-    const a = new FakeWhatsAppConnector('a');
-    const b = new FakeWhatsAppConnector('b');
-    await a.connect();
-    const res = await app({}, [a, b]).inject({ method: 'GET', url: '/health' });
+    const { app } = buildTestApp();
+    await app.inject({ method: 'POST', url: '/instances', payload: { id: 'a' } });
+    await app.inject({
+      method: 'POST',
+      url: '/instances',
+      payload: { id: 'b', autoConnect: false },
+    });
+    const res = await app.inject({ method: 'GET', url: '/health' });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ status: 'ok', instances: { total: 2, connected: 1 } });
   });
 
   it('enforces the API key everywhere except /health', async () => {
-    const server = app({ API_KEY: 'topsecret' });
+    const { app: server } = buildTestApp({ env: { API_KEY: 'topsecret' } });
     expect((await server.inject({ method: 'GET', url: '/health' })).statusCode).toBe(200);
     const denied = await server.inject({ method: 'GET', url: '/instances/x' });
     expect(denied.statusCode).toBe(401);
@@ -42,7 +32,8 @@ describe('server basics', () => {
   });
 
   it('returns a JSON 404 for unknown routes', async () => {
-    const res = await app().inject({ method: 'GET', url: '/nope' });
+    const { app } = buildTestApp();
+    const res = await app.inject({ method: 'GET', url: '/nope' });
     expect(res.statusCode).toBe(404);
     expect(res.json()).toMatchObject({ error: { code: 'NOT_FOUND' } });
   });

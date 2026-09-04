@@ -1,6 +1,7 @@
-import type { InstanceManagerLike, WhatsAppServiceApp } from '../server.js';
+import type { InstanceManager } from '../instance-manager.js';
+import type { WhatsAppServiceApp } from '../server.js';
 
-export function healthRoutes(app: WhatsAppServiceApp, manager: InstanceManagerLike): void {
+export function healthRoutes(app: WhatsAppServiceApp, manager: InstanceManager): void {
   app.get('/health', async () => {
     const instances = manager.list();
     const statuses = await Promise.all(instances.map((i) => i.connector.getStatus()));

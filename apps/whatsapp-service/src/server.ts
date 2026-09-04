@@ -1,4 +1,3 @@
-import type { WhatsAppConnector } from '@connectors/whatsapp';
 import Fastify, {
   type FastifyInstance,
   type RawReplyDefaultExpression,
@@ -9,15 +8,12 @@ import type { Logger as PinoLogger } from 'pino';
 import { apiKeyHook } from './auth-hook.js';
 import type { ServiceConfig } from './config.js';
 import { HttpError, NotFoundError, toHttpError } from './errors.js';
+import type { InstanceManager } from './instance-manager.js';
 import { healthRoutes } from './routes/health.js';
-
-/** The slice of InstanceManager the HTTP layer needs; the real class (Task 17) satisfies it. */
-export interface InstanceManagerLike {
-  list(): Array<{ definition: { id: string }; connector: WhatsAppConnector }>;
-}
+import { instanceRoutes } from './routes/instances.js';
 
 export interface ServerDeps {
-  manager: InstanceManagerLike;
+  manager: InstanceManager;
   config: ServiceConfig;
   logger: PinoLogger;
 }
@@ -48,7 +44,7 @@ export function buildServer(deps: ServerDeps): WhatsAppServiceApp {
   });
 
   healthRoutes(app, deps.manager);
-  // instanceRoutes(app, deps) — Task 17
+  instanceRoutes(app, deps);
   // messageRoutes(app, deps); mediaRoutes(app, deps) — Task 18
 
   return app;
