@@ -26,7 +26,8 @@ describe('EventDeduplicator', () => {
     d.isDuplicate('a'); // refresh a, b is now oldest
     d.isDuplicate('c'); // evicts b
     expect(d.size).toBe(2);
-    expect(d.isDuplicate('b')).toBe(false);
-    expect(d.isDuplicate('a')).toBe(true);
+    expect(d.isDuplicate('a')).toBe(true); // a survived
+    expect(d.isDuplicate('b')).toBe(false); // b was evicted (re-inserted now, evicting c)
+    expect(d.isDuplicate('c')).toBe(false);
   });
 });
