@@ -1,0 +1,32 @@
+{
+  "name": "@connectors/observability",
+  "version": "0.1.0",
+  "description": "Structured logging with secret redaction",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@connectors/config": "workspace:*",
+    "@connectors/core": "workspace:*",
+    "pino": "10.3.1",
+    "pino-pretty": "13.1.3"
+  }
+}

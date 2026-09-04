@@ -1,0 +1,22 @@
+/** pino redact paths that cover WhatsApp auth state, media keys and generic secrets. */
+export const DEFAULT_REDACT_PATHS: readonly string[] = [
+  'creds',
+  'keys',
+  'authState',
+  'noiseKey',
+  'pairingEphemeralKeyPair',
+  'signedIdentityKey',
+  'signedPreKey',
+  'advSecretKey',
+  'mediaKey',
+  '*.mediaKey',
+  '*.privKey',
+  '*.private',
+  '*.public',
+  'secret',
+  '*.secret',
+  'apiKey',
+  'authorization',
+  'headers.authorization',
+  'req.headers.authorization',
+];
