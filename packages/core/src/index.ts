@@ -24,3 +24,4 @@ export type { ConnectorEvent } from './events.js';
 export { assertValidKey, assertValidPrefix, jsonCodec, namespaced } from './storage/store.js';
 export type { KeyValueStore, SecretStore, StateStore } from './storage/store.js';
 export { MemoryStore } from './storage/memory-store.js';
+export { FileStore, decodeSegment, encodeSegment } from './storage/file-store.js';
