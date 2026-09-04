@@ -22,6 +22,16 @@ describe('namespaced', () => {
     await inner.set('c', new Uint8Array([1]));
     expect(await base.list('')).toEqual(['a/b/c']);
   });
+
+  it('rejects invalid keys and prefixes instead of throwing synchronously', async () => {
+    const ns = namespaced(new MemoryStore(), 'p');
+    await expect(ns.get('/bad')).rejects.toThrow('Invalid store key');
+    await expect(ns.set('a//b', new Uint8Array())).rejects.toThrow('Invalid store key');
+    await expect(ns.delete('')).rejects.toThrow('Invalid store key');
+    await expect(ns.list('/x')).rejects.toThrow('Invalid store key');
+    await expect(ns.clear('x//')).rejects.toThrow('Invalid store key');
+    expect(() => namespaced(new MemoryStore(), 'bad/')).toThrow('Invalid store key');
+  });
 });
 
 describe('jsonCodec', () => {

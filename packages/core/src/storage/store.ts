@@ -39,11 +39,11 @@ export function namespaced(store: KeyValueStore, prefix: string): KeyValueStore 
     return base + p;
   };
   return {
-    get: (key) => store.get(full(key)),
-    set: (key, value) => store.set(full(key), value),
-    delete: (key) => store.delete(full(key)),
+    get: async (key) => store.get(full(key)),
+    set: async (key, value) => store.set(full(key), value),
+    delete: async (key) => store.delete(full(key)),
     list: async (p) => (await store.list(fullPrefix(p))).map((k) => k.slice(base.length)),
-    clear: (p) => store.clear(fullPrefix(p)),
+    clear: async (p) => store.clear(fullPrefix(p)),
   };
 }
 
