@@ -69,7 +69,7 @@ pnpm lint
 pnpm dev        # watches packages and runs the service with tsx
 ```
 
-Docker: `docker compose up --build` starts the service on port 3000 with auth state in `./data`.
+Docker: `docker compose up --build` starts the service on port 3000 with auth state in the named volume `whatsapp-data`; use `docker compose down -v` to wipe it.
 
 ## How WhatsApp pairing works
 

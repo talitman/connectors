@@ -288,7 +288,7 @@ Chat ids passed to `sendText`/`sendMedia` accept a normalized JID (`<number>@s.w
 
 ### 8.2 Events
 
-`WhatsAppEvent = ConnectorEvent<WhatsAppMessage> & { type: 'message.received' | 'message.sent' }` or `ConnectorEvent<ConnectorStatus> & { type: 'connection.updated' }`. `externalId` is the WhatsApp message id for messages and an ISO timestamp for connection updates. `connector` is always `'whatsapp'`.
+`WhatsAppEvent = ConnectorEvent<WhatsAppMessage> & { type: 'message.received' | 'message.sent' }` or `ConnectorEvent<ConnectorStatus> & { type: 'connection.updated' }`. `externalId` is the WhatsApp message id for messages and an ISO timestamp with a monotonic sequence suffix (`<iso>#<n>`) for connection updates, so two transitions in the same millisecond do not collide. `connector` is always `'whatsapp'`.
 
 ### 8.3 Normalized message
 
@@ -429,7 +429,7 @@ Every raw message is keyed `${accountId}:${messageId}`; `EventDeduplicator` from
 | Boom 408/428/503, network errors, timeouts | `CONNECTION_LOST` retryable |
 | Boom 515 | `RESTART_REQUIRED` retryable |
 | Media 404/410 | `MediaUnavailableError` `MEDIA_UNAVAILABLE` non-retryable |
-| Unknown | `UNKNOWN` retryable=false |
+| Unknown | `UNKNOWN` retryable=true (the manager backs off and retries) |
 
 ### 8.10 Privacy defaults
 

@@ -16,6 +16,6 @@ PHONE_NUMBER=972501234567 pnpm start   # pairing-code login instead
 3. Send yourself a text: the normalized event prints as JSON.
 4. Send an image or a voice note: it is downloaded to `./downloads/<messageId>.<ext>`. This is the explicit opt-in to storing media; the connector never stores media on its own.
 5. Press Ctrl+C, then run `pnpm start` again: it reconnects from `./data` without a QR.
-6. To unlink, delete `./data` (or call `connector.logout()`).
+6. To unlink the device, call `connector.logout()` or unlink it from WhatsApp on your phone. Deleting `./data` only throws away the local session — the phone still lists the linked device until it is unlinked from one of those two ends, and the next `pnpm start` pairs a new one.
 
 `./data` contains the WhatsApp session keys. Treat it like a password.

@@ -12,6 +12,8 @@ This document describes exactly what `@connectors/whatsapp` and `apps/whatsapp-s
 | Message bodies                                                                                    | nobody                       |                                                                   | Never; your subscriber may store them                                                  |
 | Media files                                                                                       | nobody                       |                                                                   | Never; `downloadMedia` streams to you, `downloadMediaToFile` writes only where you ask |
 
+In service mode the store is namespaced per instance, so the same credential and key entries live at `instances/<id>/whatsapp/<id>/auth/creds` and `instances/<id>/whatsapp/<id>/auth/keys/<type>/<id>` (the instance id is also the account id), alongside `instances/<id>/definition`. `DELETE /instances/:id` clears the whole `instances/<id>/` prefix.
+
 `FileStore` writes files with mode 0600 in directories with mode 0700. The directory contains everything needed to act as your WhatsApp linked device. Back it up encrypted and never commit it.
 
 ## What is kept only in memory

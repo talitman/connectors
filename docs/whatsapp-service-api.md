@@ -32,12 +32,18 @@ Errors are `{ "error": { "code": string, "message": string, "retryable": boolean
 
 `to` is a bare number with country code or a JID (`...@s.whatsapp.net`, `...@g.us`, `...@lid`). Exactly one of `base64` or `url` is required for media; the service fetches `url` itself.
 
+## Security
+
+Media `url` is fetched by the service itself, from wherever the service is running: it is a server-side request forgery surface, so treat the ability to call `POST /instances/:id/messages` as the ability to make the service issue arbitrary outbound HTTP requests. Only `http:` and `https:` urls are accepted (anything else is `400 MEDIA_FETCH_FAILED`), and the fetched body is capped at 64 MiB — rejected both when `Content-Length` declares more and when the stream itself exceeds the cap. There is no allowlist or private-address filter; put the service behind a network boundary you trust, or do not expose the `url` form.
+
+Always set `API_KEY` unless the service is bound to loopback (`HOST=127.0.0.1`). With no `API_KEY`, every endpoint except `GET /health` is unauthenticated; the service logs a startup warning when it is not bound to loopback and no key is set.
+
 ## Webhook delivery
 
 Each event is POSTed as JSON to the instance webhook (or `WEBHOOK_URL`). Headers:
 
 - `X-Connectors-Event`: event type (`message.received`, `message.sent`, `connection.updated`)
-- `X-Connectors-Delivery`: unique id per attempt
+- `X-Connectors-Delivery`: unique id per event, generated once per publish and repeated across the retries of that event, so consumers can use it as an idempotency key
 - `X-Connectors-Signature`: `sha256=<hex HMAC-SHA256 of the raw body>` when a secret is set
 
 Delivery is best effort: three attempts with backoff on network errors and 5xx/429, then the event is logged and dropped. Verify signatures like this:
