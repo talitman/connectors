@@ -26,6 +26,7 @@ export class FakeWhatsAppClient implements WhatsAppClient {
   registered = false;
   started = false;
   auth: AuthStore | undefined;
+  self: string | undefined = '972509999999@s.whatsapp.net';
   nextPairingCode = 'ABCD-EFGH';
   nextMessageId = 1;
   downloadImpl: (d: MediaDescriptor) => Promise<Readable> = async () =>
@@ -54,6 +55,10 @@ export class FakeWhatsAppClient implements WhatsAppClient {
 
   isRegistered(): boolean {
     return this.registered;
+  }
+
+  selfJid(): string | undefined {
+    return this.self;
   }
 
   async requestPairingCode(phoneNumber: string): Promise<string> {

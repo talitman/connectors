@@ -150,6 +150,8 @@ export interface WhatsAppClient {
     handler: (payload: ClientEventMap[E]) => void,
   ): Unsubscribe;
   isRegistered(): boolean;
+  /** Normalized JID of the connected account, once known. */
+  selfJid(): string | undefined;
   requestPairingCode(phoneNumber: string): Promise<string>;
   sendText(jid: string, text: string, quoted?: RawMessage): Promise<RawMessage>;
   sendMedia(jid: string, media: OutgoingMedia, quoted?: RawMessage): Promise<RawMessage>;
