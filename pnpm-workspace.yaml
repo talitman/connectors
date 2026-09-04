@@ -15,5 +15,5 @@ overrides:
   pino: 10.3.1
 allowBuilds:
   baileys: true
-  esbuild: true
+  esbuild: false
   protobufjs: false
