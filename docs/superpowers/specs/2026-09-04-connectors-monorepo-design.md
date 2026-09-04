@@ -23,6 +23,7 @@ V1 delivers the monorepo infrastructure, the shared `@connectors/core` contracts
 | Logging | pino behind `@connectors/observability`, exposing the core `Logger` interface. |
 | Build | `tsc` per package, ESM only, declaration files, `exports` limited to `.`. |
 | Repo | Initialized as a git repository at the root. |
+| Media handles | No decryption material leaves the connector. `MediaRef` carries only metadata and the message id; the connector resolves downloads from an in-memory cache (or from consumer-supplied `raw`). Media of messages received before a restart is not downloadable unless the consumer kept `raw`. |
 
 ## 3. Baileys facts the design depends on (verified 2026-09-04)
 
@@ -226,7 +227,7 @@ function createLogger(options: { name?: string; level?: LogLevel; pretty?: boole
 const DEFAULT_REDACT_PATHS: string[];
 ```
 
-Default redaction paths cover auth material and secrets: `creds`, `keys`, `authState`, `*.privKey`, `*.private`, `*.public`, `noiseKey`, `pairingEphemeralKeyPair`, `signedIdentityKey`, `signedPreKey`, `advSecretKey`, `mediaKey`, `*.mediaKey`, `handle`, `secret`, `*.secret`, `apiKey`, `authorization`, `headers.authorization`, `req.headers.authorization`. Redacted values are replaced with `[REDACTED]`. The returned object satisfies the core `Logger` interface and is also pino-compatible so it can be passed to Baileys and Fastify.
+Default redaction paths cover auth material and secrets: `creds`, `keys`, `authState`, `*.privKey`, `*.private`, `*.public`, `noiseKey`, `pairingEphemeralKeyPair`, `signedIdentityKey`, `signedPreKey`, `advSecretKey`, `mediaKey`, `*.mediaKey`, `secret`, `*.secret`, `apiKey`, `authorization`, `headers.authorization`, `req.headers.authorization`. Redacted values are replaced with `[REDACTED]`. The returned object satisfies the core `Logger` interface and is also pino-compatible so it can be passed to Baileys and Fastify.
 
 ## 8. `@connectors/whatsapp`
 
@@ -245,6 +246,7 @@ interface WhatsAppConnectorOptions {
   includeHistory?: boolean;       // default false -> 'append' upserts ignored
   includeRaw?: boolean;           // default false -> ConnectorEvent.raw omitted
   dedupe?: { maxEntries?: number; ttlMs?: number };
+  mediaCache?: { maxEntries?: number; ttlMs?: number };   // default 5000, 24h
   browser?: { os: string; name: string; version?: string };  // defaults to a desktop browser identity
   markOnlineOnConnect?: boolean;  // default false
   fetchLatestVersion?: boolean;   // default false (privacy: avoids a GitHub request)
@@ -259,8 +261,8 @@ interface WhatsAppConnector extends Connector, EventSource<WhatsAppEvent> {
   logout(): Promise<void>;                     // unlink device on WhatsApp and clear auth storage
   sendText(chatId: string, text: string, options?: { quotedMessageId?: string }): Promise<SentMessage>;
   sendMedia(chatId: string, media: OutgoingMedia, options?: { quotedMessageId?: string }): Promise<SentMessage>;
-  downloadMedia(media: MediaRef): Promise<Readable>;
-  downloadMediaToFile(media: MediaRef, filePath: string): Promise<{ path: string; bytes: number }>;
+  downloadMedia(source: MediaSource): Promise<Readable>;
+  downloadMediaToFile(source: MediaSource, filePath: string): Promise<{ path: string; bytes: number }>;
 }
 
 type PairingState =
@@ -274,6 +276,10 @@ type OutgoingMedia =
   | { kind: 'document'; data; mimetype; fileName: string; caption? };
 
 interface SentMessage { messageId: string; chatId: string; timestamp: Date }
+
+// A MediaRef resolves through the connector's in-memory cache. A consumer that opted into
+// `includeRaw` and stored `event.raw` itself can download later from that raw payload.
+type MediaSource = MediaRef | { raw: unknown };
 
 function createWhatsAppConnector(options: WhatsAppConnectorOptions): WhatsAppConnector;
 ```
@@ -323,7 +329,7 @@ interface MediaRef {
   fileName?: string;
   width?: number; height?: number;
   durationSeconds?: number;
-  handle: string;           // opaque, see 8.5
+  messageId: string;        // key into the connector's in-memory media cache, see 8.6
 }
 ```
 
@@ -350,8 +356,8 @@ packages/whatsapp/src/
     message.ts             raw -> WhatsAppMessage
     jid.ts                 chat type + phone/lid extraction
   media/
-    handle.ts              MediaRef.handle encode/decode
-    download.ts            stream download + reupload retry + temp file cleanup
+    cache.ts               bounded LRU+TTL cache of raw media messages keyed by message id
+    download.ts            resolve source -> descriptor, stream download, reupload retry, temp file cleanup
   send.ts                  outgoing text/media mapping
   dedupe.ts
   errors.ts                Boom/Baileys error -> ConnectorError
@@ -384,10 +390,12 @@ Keys under the injected store: `creds` and `keys/<type>/<id>`. Values are JSON e
 
 ### 8.6 Media
 
-- `MediaRef.handle` is `base64url(JSON({ v: 1, t: <baileys media type>, k: <mediaKey b64>, p: <directPath>, u?: <url>, m: <mimetype>, s?: <fileLength> }))`. It contains decryption material and is documented as sensitive (same sensitivity as the message it belongs to).
-- `downloadMedia(ref)` decodes the handle and returns the decrypted `Readable` from the client. No buffering into memory.
-- On CDN 404/410 the connector looks up the message id in a bounded in-memory recent-message cache (default 1000 entries, 1 hour) and, if present, calls `requestReupload` once and retries. Otherwise throws `MediaUnavailableError` (`code: 'MEDIA_UNAVAILABLE'`, retryable=false).
+- Normalized events never carry decryption material. `MediaRef` holds only public metadata plus `messageId`.
+- The connector keeps a bounded in-memory **media cache** of raw messages that contain media, keyed by message id (`mediaCache: { maxEntries = 5000, ttlMs = 24h }` option). Entries are evicted by LRU and TTL and the cache lives only in process memory, so it is empty after a restart.
+- `downloadMedia(source)` resolves the raw message either from the cache (when given a `MediaRef`) or from `source.raw` (when the consumer stored the raw payload itself), extracts the media descriptor, and returns the decrypted `Readable` from the client. No buffering into memory. A `MediaRef` whose message is no longer cached throws `MediaUnavailableError` (`code: 'MEDIA_UNAVAILABLE'`, retryable=false) with a message explaining the cache miss.
+- On CDN 404/410 the connector calls `requestReupload` once with the raw message and retries. If that fails it throws `MediaUnavailableError`.
 - `downloadMediaToFile` streams into `<filePath>.<random>.part` in the same directory, renames on success, and removes the partial file on any error.
+- The trade-off is deliberate: media for a message received before a process restart cannot be fetched through the connector unless the consumer kept `raw`. This is documented in the README and in `docs/privacy.md`.
 
 ### 8.7 Connection state machine
 
@@ -463,7 +471,7 @@ DELETE /instances/:id                 204 (logout best effort, clear auth, remov
 POST   /instances/:id/messages        body { to, type: 'text', text, quotedMessageId? }
                                         | { to, type: 'image'|'video'|'audio'|'document', mimetype, base64?: string, url?: string, caption?, fileName?, voiceNote? }
                                       201 SentMessage; 409 if instance not connected
-GET    /instances/:id/media/:handle   200 streamed body with Content-Type from the handle; 404 MEDIA_UNAVAILABLE
+GET    /instances/:id/media/:messageId  200 streamed body with Content-Type and Content-Disposition from the cached message; 404 MEDIA_UNAVAILABLE (unknown id, expired cache, or media expired on WhatsApp)
 ```
 
 `InstanceView = { id, createdAt, webhook?: { url, hasSecret }, pairing: { method, phoneNumber? }, desiredState: 'connected' | 'disconnected', status: ConnectorStatus }`. Errors are `{ error: { code, message, retryable } }` with 400 for validation, 401 for auth, 404, 409, 500.
@@ -518,14 +526,14 @@ No test contacts WhatsApp. `FakeWhatsAppClient` records calls and lets tests emi
 | State machine | whatsapp | every row of table 8.7, backoff timing with fake timers, `disconnect()` cancels reconnect, `maxAttempts` exhaustion, pairing code requested once |
 | Dedupe integration | whatsapp | same id twice emits once; `append` ignored by default |
 | Error mapping | whatsapp | each Boom code and non-Boom error |
-| Media | whatsapp | handle encode/decode and version check, download returns stream, reupload retry on 404 once, `downloadMediaToFile` cleans partial file on error |
+| Media | whatsapp | media cache stores/evicts/expires, `downloadMedia` from `MediaRef` hits cache, from `{ raw }` bypasses cache, cache miss throws `MediaUnavailableError`, download returns stream, reupload retry on 404 once, `downloadMediaToFile` cleans partial file on error |
 | Send | whatsapp | chatId coercion, text with link preview disabled, media kinds map to the right client call, error when not connected |
 | Service | service | every route via `fastify.inject` with fake connector factory; API key enforcement; 404/409; restore-on-boot reconnects `desiredState: connected`; webhook receives events with signature |
 
 ## 12. Documentation
 
 - `README.md`: purpose, architecture with Mermaid diagram (consumer app -> `@connectors/whatsapp` -> Baileys -> WhatsApp; service -> webhook consumer), package structure, why connectors are packages, package mode vs service mode, quick start (`pnpm install`, `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm dev`), how pairing works (QR and code, the 515 restart), persistence requirements, privacy summary linking to `docs/privacy.md`, adding a connector linking to `docs/adding-a-connector.md`.
-- `docs/privacy.md`: tables for what Baileys stores, what the wrapper stores, outbound connections (host, when, opt-in?), credential location, message/media location, memory-only data, and how to opt into storing messages or media.
+- `docs/privacy.md`: tables for what Baileys stores, what the wrapper stores, outbound connections (host, when, opt-in?), credential location, message/media location, memory-only data (dedupe cache, media cache of raw messages, pairing state), and how to opt into storing messages or media.
 - `docs/adding-a-connector.md`: package skeleton, which core interfaces to implement, the client-adapter pattern, test expectations.
 - `docs/whatsapp-service-api.md`: endpoint reference with request/response examples and webhook payload/signature verification snippet.
 
