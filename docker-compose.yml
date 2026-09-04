@@ -1,0 +1,15 @@
+services:
+  whatsapp-service:
+    build:
+      context: .
+      dockerfile: apps/whatsapp-service/Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      LOG_LEVEL: info
+      # API_KEY: change-me
+      # WEBHOOK_URL: https://example.com/webhooks/whatsapp
+      # WEBHOOK_SECRET: change-me
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
