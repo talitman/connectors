@@ -7,19 +7,19 @@ import type {
 import type { MediaKind, MediaRef } from '../types.js';
 import { unwrapContent } from '../normalize/message.js';
 
-const MEDIA_FIELDS: ReadonlyArray<[keyof RawMessageContent & string, MediaKind]> = [
+const MEDIA_FIELDS = [
   ['imageMessage', 'image'],
   ['videoMessage', 'video'],
   ['audioMessage', 'audio'],
   ['documentMessage', 'document'],
   ['stickerMessage', 'sticker'],
-];
+] as const;
 
 export function findMedia(
   content: RawMessageContent,
 ): { kind: MediaKind; media: RawMediaMessage } | undefined {
   for (const [field, kind] of MEDIA_FIELDS) {
-    const media = content[field] as RawMediaMessage | null | undefined;
+    const media = content[field];
     if (media) return { kind, media };
   }
   return undefined;

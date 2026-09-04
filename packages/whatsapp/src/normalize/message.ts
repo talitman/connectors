@@ -59,8 +59,20 @@ export function timestampOf(raw: RawMessage): Date {
 }
 
 function contextOf(content: RawMessageContent, type: string): RawContextInfo | undefined {
-  const node = content[type] as { contextInfo?: RawContextInfo | null } | null | undefined;
-  return node?.contextInfo ?? undefined;
+  switch (type) {
+    case 'extendedTextMessage':
+      return content.extendedTextMessage?.contextInfo ?? undefined;
+    case 'contactMessage':
+      return content.contactMessage?.contextInfo ?? undefined;
+    case 'contactsArrayMessage':
+      return content.contactsArrayMessage?.contextInfo ?? undefined;
+    case 'locationMessage':
+      return content.locationMessage?.contextInfo ?? undefined;
+    case 'liveLocationMessage':
+      return content.liveLocationMessage?.contextInfo ?? undefined;
+    default:
+      return undefined;
+  }
 }
 
 function senderOf(
