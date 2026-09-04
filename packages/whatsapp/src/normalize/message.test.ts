@@ -75,6 +75,40 @@ describe('normalizeMessage', () => {
     expect(m.ephemeralExpirationSeconds).toBe(86400);
   });
 
+  it('extracts quoted, mentions and forwarded context from media messages', () => {
+    const m = normalizeMessage(
+      raw({
+        imageMessage: {
+          ...media,
+          caption: 'look',
+          contextInfo: {
+            stanzaId: 'Q2',
+            participant: '222@s.whatsapp.net',
+            mentionedJid: ['222@s.whatsapp.net'],
+            isForwarded: true,
+          },
+        },
+      }),
+    )!;
+    expect(m.content).toMatchObject({ kind: 'image', caption: 'look' });
+    expect(m.quoted).toEqual({ messageId: 'Q2', senderId: '222@s.whatsapp.net' });
+    expect(m.mentions).toEqual(['222@s.whatsapp.net']);
+    expect(m.isForwarded).toBe(true);
+  });
+
+  it('extracts quoted context from unsupported provider types too', () => {
+    const m = normalizeMessage(
+      raw({
+        pollCreationMessageV3: {
+          name: 'p',
+          contextInfo: { stanzaId: 'Q3', participant: '333@s.whatsapp.net' },
+        },
+      }),
+    )!;
+    expect(m.content).toEqual({ kind: 'unsupported', providerType: 'pollCreationMessageV3' });
+    expect(m.quoted).toEqual({ messageId: 'Q3', senderId: '333@s.whatsapp.net' });
+  });
+
   it('carries LID and phone number for senders addressed by LID', () => {
     const m = normalizeMessage(
       raw(

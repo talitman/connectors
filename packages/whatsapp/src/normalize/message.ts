@@ -59,20 +59,15 @@ export function timestampOf(raw: RawMessage): Date {
 }
 
 function contextOf(content: RawMessageContent, type: string): RawContextInfo | undefined {
-  switch (type) {
-    case 'extendedTextMessage':
-      return content.extendedTextMessage?.contextInfo ?? undefined;
-    case 'contactMessage':
-      return content.contactMessage?.contextInfo ?? undefined;
-    case 'contactsArrayMessage':
-      return content.contactsArrayMessage?.contextInfo ?? undefined;
-    case 'locationMessage':
-      return content.locationMessage?.contextInfo ?? undefined;
-    case 'liveLocationMessage':
-      return content.liveLocationMessage?.contextInfo ?? undefined;
-    default:
-      return undefined;
-  }
+  // Every content node keyed by its provider type (conversation excluded --
+  // it carries no contextInfo) may carry contextInfo: extended text, contacts,
+  // locations, media (image/video/audio/document/sticker), and provider types
+  // we still map to `unsupported` (polls, buttons, templates, group invites).
+  // RawMessageContent's index signature gives no per-key type here, so narrow
+  // at this provider-data boundary rather than enumerating and risking a
+  // silently dropped type.
+  const node = content[type] as { contextInfo?: RawContextInfo | null } | null | undefined;
+  return node?.contextInfo ?? undefined;
 }
 
 function senderOf(
