@@ -1,5 +1,7 @@
 # connectors
 
+[![CI](https://github.com/talitman/connectors/actions/workflows/ci.yml/badge.svg)](https://github.com/talitman/connectors/actions/workflows/ci.yml)
+
 Reusable, self-hosted integration connectors as TypeScript packages, with optional standalone services.
 
 Each external system (WhatsApp today; Telegram, Gmail, Slack, Notion later) is implemented once as a package that speaks the shared contracts in `@connectors/core`. Any application can import the package directly, or run the thin HTTP service around it.
