@@ -1,7 +1,7 @@
 # Adding a connector
 
-1. **Create the package** `packages/<name>` by copying `packages/config`'s `package.json`, `tsconfig.json`, `tsconfig.build.json` and `vitest.config.ts`. Name it `@connectors/<name>`, depend on `@connectors/core` with `workspace:*`, export only from `src/index.ts`.
-2. **Implement the contracts** from `@connectors/core`:
+1. **Create the package** `packages/<name>` by copying `packages/config`'s `package.json`, `tsconfig.json`, `tsconfig.build.json` and `vitest.config.ts`. Name it `@talitman/<name>`, depend on `@talitman/core` with `workspace:*`, export only from `src/index.ts`.
+2. **Implement the contracts** from `@talitman/core`:
    - `Connector` (`name`, `accountId`, `connect`, `disconnect`, `getStatus`).
    - `EventSource` if the provider pushes events, `Pollable` if you must poll, both if needed. Do not implement what you do not need.
    - Emit `ConnectorEvent` objects built with `buildEventId`; keep `payload` normalized and provider-neutral, put the provider shape in `raw` only when the consumer asks.

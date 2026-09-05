@@ -1,4 +1,4 @@
-import { ConfigError, MemoryStore } from '@connectors/core';
+import { ConfigError, MemoryStore } from '@talitman/core';
 import { describe, expect, it } from 'vitest';
 import { resolveOptions } from './options.js';
 

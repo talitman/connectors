@@ -1,4 +1,4 @@
-import { ConfigError } from '@connectors/core';
+import { ConfigError } from '@talitman/core';
 import type { z } from 'zod';
 
 export function loadConfig<T extends z.ZodType>(

@@ -1,4 +1,4 @@
-import { createWebhookPublisher, type EventPublisher, type Logger } from '@connectors/core';
+import { createWebhookPublisher, type EventPublisher, type Logger } from '@talitman/core';
 import type { ServiceConfig } from './config.js';
 import type { InstanceDefinition } from './instance.js';
 

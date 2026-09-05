@@ -1,4 +1,4 @@
-import type { KeyValueStore } from '@connectors/core';
+import type { KeyValueStore } from '@talitman/core';
 import type { AuthStore } from '../client/types.js';
 import { decodeAuthValue, encodeAuthValue } from './serializer.js';
 

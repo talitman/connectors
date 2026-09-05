@@ -1,5 +1,5 @@
 {
-  "name": "@connectors/observability",
+  "name": "@talitman/observability",
   "version": "0.1.0",
   "description": "Structured logging with secret redaction",
   "type": "module",
@@ -39,8 +39,8 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@connectors/config": "workspace:*",
-    "@connectors/core": "workspace:*",
+    "@talitman/config": "workspace:*",
+    "@talitman/core": "workspace:*",
     "pino": "10.3.1",
     "pino-pretty": "13.1.3"
   }

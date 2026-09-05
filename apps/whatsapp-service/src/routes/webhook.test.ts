@@ -1,4 +1,4 @@
-import { signWebhookBody, type ConnectorEvent } from '@connectors/core';
+import { signWebhookBody, type ConnectorEvent } from '@talitman/core';
 import { describe, expect, it, vi } from 'vitest';
 import { buildTestApp } from '../testing/test-app.js';
 

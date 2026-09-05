@@ -1,6 +1,6 @@
-import { FileStore } from '@connectors/core';
-import { createPinoLogger } from '@connectors/observability';
-import { createWhatsAppConnector } from '@connectors/whatsapp';
+import { FileStore } from '@talitman/core';
+import { createPinoLogger } from '@talitman/observability';
+import { createWhatsAppConnector } from '@talitman/whatsapp';
 import { loadServiceConfig } from './config.js';
 import { InstanceManager } from './instance-manager.js';
 import { createPublisherFactory } from './publishers.js';

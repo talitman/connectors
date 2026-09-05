@@ -1,4 +1,4 @@
-import { noopLogger } from '@connectors/core';
+import { noopLogger } from '@talitman/core';
 import { describe, expect, it } from 'vitest';
 import { createPublisherFactory } from './publishers.js';
 

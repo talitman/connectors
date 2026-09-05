@@ -1,4 +1,4 @@
-import { ConnectorError } from '@connectors/core';
+import { ConnectorError } from '@talitman/core';
 import type { z } from 'zod';
 
 export class HttpError extends Error {

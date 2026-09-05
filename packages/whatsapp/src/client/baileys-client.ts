@@ -1,5 +1,5 @@
 import type { Readable } from 'node:stream';
-import { nonRetryable, type Logger, type Unsubscribe } from '@connectors/core';
+import { nonRetryable, type Logger, type Unsubscribe } from '@talitman/core';
 import makeWASocket, {
   Browsers,
   downloadContentFromMessage,

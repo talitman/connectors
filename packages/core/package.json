@@ -1,5 +1,5 @@
 {
-  "name": "@connectors/core",
+  "name": "@talitman/core",
   "version": "0.1.0",
   "description": "Shared contracts for connectors: lifecycle, events, storage, publishing, errors, logging",
   "type": "module",

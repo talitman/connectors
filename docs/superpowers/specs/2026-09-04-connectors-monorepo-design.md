@@ -10,7 +10,7 @@ A TypeScript monorepo of reusable external-integration connectors. Each connecto
 1. directly as a workspace/npm package inside another application, or
 2. through an optional standalone HTTP service that wraps the package.
 
-V1 delivers the monorepo infrastructure, the shared `@connectors/core` contracts, a self-hosted WhatsApp connector built on Baileys, a standalone WhatsApp HTTP service with webhook event delivery, a runnable example, tests, and documentation. Telegram, Gmail, Notion, Slack and other connectors are explicitly out of scope but the structure must let them be added without touching existing packages.
+V1 delivers the monorepo infrastructure, the shared `@talitman/core` contracts, a self-hosted WhatsApp connector built on Baileys, a standalone WhatsApp HTTP service with webhook event delivery, a runnable example, tests, and documentation. Telegram, Gmail, Notion, Slack and other connectors are explicitly out of scope but the structure must let them be added without touching existing packages.
 
 ## 2. Decisions taken during brainstorming
 
@@ -18,9 +18,9 @@ V1 delivers the monorepo infrastructure, the shared `@connectors/core` contracts
 |---|---|
 | Sending | Text and media sending are in V1 (`sendText`, `sendMedia`, `POST /instances/:id/messages`). |
 | Service instances across restart | Definitions persist via the storage abstraction; on boot the service restores them and reconnects those whose desired state was `connected`. |
-| Provider boundary | Internal `WhatsAppClient` interface inside `@connectors/whatsapp`; `BaileysClient` is the only module importing Baileys; tests use a fake client. |
+| Provider boundary | Internal `WhatsAppClient` interface inside `@talitman/whatsapp`; `BaileysClient` is the only module importing Baileys; tests use a fake client. |
 | HTTP framework | Fastify with zod validation. |
-| Logging | pino behind `@connectors/observability`, exposing the core `Logger` interface. |
+| Logging | pino behind `@talitman/observability`, exposing the core `Logger` interface. |
 | Build | `tsc` per package, ESM only, declaration files, `exports` limited to `.`. |
 | Repo | Initialized as a git repository at the root. |
 | Media handles | No decryption material leaves the connector. `MediaRef` carries only metadata and the message id; the connector resolves downloads from an in-memory cache (or from consumer-supplied `raw`). Media of messages received before a restart is not downloadable unless the consumer kept `raw`. |
@@ -43,12 +43,12 @@ V1 delivers the monorepo infrastructure, the shared `@connectors/core` contracts
 ```text
 connectors/
   apps/
-    whatsapp-service/           Fastify HTTP wrapper around @connectors/whatsapp, Dockerfile
+    whatsapp-service/           Fastify HTTP wrapper around @talitman/whatsapp, Dockerfile
   packages/
-    core/                       @connectors/core: contracts, stores, publishers, errors, utils
-    config/                     @connectors/config: zod-based environment loading
-    observability/              @connectors/observability: pino logger with redaction
-    whatsapp/                   @connectors/whatsapp: Baileys-backed connector
+    core/                       @talitman/core: contracts, stores, publishers, errors, utils
+    config/                     @talitman/config: zod-based environment loading
+    observability/              @talitman/observability: pino logger with redaction
+    whatsapp/                   @talitman/whatsapp: Baileys-backed connector
   examples/
     whatsapp-basic/             runnable example using the package directly
   docs/
@@ -72,7 +72,7 @@ connectors/
 - **Docker:** multi-stage Dockerfile for `apps/whatsapp-service` (install with pnpm, build, `pnpm deploy --prod` to a pruned directory, run on `node:22-alpine` as non-root). `docker-compose.yml` runs the service with a `./data` volume mounted at `DATA_DIR`.
 - **Node:** >= 20 (`engines`), developed on Node 26.
 
-## 5. `@connectors/core`
+## 5. `@talitman/core`
 
 Provider-neutral. Runtime dependencies: none (Node built-ins only).
 
@@ -208,7 +208,7 @@ const noopLogger: Logger;
 - `EventDeduplicator({ maxEntries = 5000, ttlMs = 10 * 60_000, now? })` with `isDuplicate(id): boolean`: records the id and returns `false` on first sight, returns `true` on any later sight within the TTL. Bounded LRU with TTL, no timers (expiry checked on access).
 - `sleep(ms, signal?)`.
 
-## 6. `@connectors/config`
+## 6. `@talitman/config`
 
 Runtime deps: `zod`.
 
@@ -218,7 +218,7 @@ function loadConfig<T extends z.ZodTypeAny>(schema: T, env: Record<string, strin
 
 Throws `ConfigError` with a readable multi-line message listing each invalid variable. Exposes reusable field schemas: `logLevel` (`fatal|error|warn|info|debug|trace|silent`, default `info`), `port` (1–65535 from string), `booleanString` (`true/false/1/0/yes/no`), `optionalUrl`, `nonEmptyString`.
 
-## 7. `@connectors/observability`
+## 7. `@talitman/observability`
 
 Runtime deps: `pino`. Dev dep: `pino-pretty` (only used when `pretty: true`).
 
@@ -229,9 +229,9 @@ const DEFAULT_REDACT_PATHS: string[];
 
 Default redaction paths cover auth material and secrets: `creds`, `keys`, `authState`, `*.privKey`, `*.private`, `*.public`, `noiseKey`, `pairingEphemeralKeyPair`, `signedIdentityKey`, `signedPreKey`, `advSecretKey`, `mediaKey`, `*.mediaKey`, `secret`, `*.secret`, `apiKey`, `authorization`, `headers.authorization`, `req.headers.authorization`. Redacted values are replaced with `[REDACTED]`. The returned object satisfies the core `Logger` interface and is also pino-compatible so it can be passed to Baileys and Fastify.
 
-## 8. `@connectors/whatsapp`
+## 8. `@talitman/whatsapp`
 
-Runtime deps: `@connectors/core`, `baileys` (>= 7.0.0-rc14), `zod` (option validation). Boom errors from Baileys are read structurally (`error.output.statusCode`) so no extra dependency is needed. No other third-party deps. Optional peers not installed.
+Runtime deps: `@talitman/core`, `baileys` (>= 7.0.0-rc14), `zod` (option validation). Boom errors from Baileys are read structurally (`error.output.statusCode`) so no extra dependency is needed. No other third-party deps. Optional peers not installed.
 
 ### 8.1 Public API
 
@@ -440,7 +440,7 @@ Every raw message is keyed `${accountId}:${messageId}`; `EventDeduplicator` from
 
 ## 9. `apps/whatsapp-service`
 
-Runtime deps: `@connectors/core`, `@connectors/config`, `@connectors/observability`, `@connectors/whatsapp`, `fastify`, `zod`, `qrcode` (QR data URL for the pairing endpoint).
+Runtime deps: `@talitman/core`, `@talitman/config`, `@talitman/observability`, `@talitman/whatsapp`, `fastify`, `zod`, `qrcode` (QR data URL for the pairing endpoint).
 
 ### 9.1 Configuration (environment)
 
@@ -481,7 +481,7 @@ GET    /instances/:id/media/:messageId  200 streamed body with Content-Type and 
 ```text
 apps/whatsapp-service/src/
   index.ts             bootstrap: load config, logger, store, manager, server; graceful shutdown on SIGTERM/SIGINT
-  config.ts            zod env schema via @connectors/config
+  config.ts            zod env schema via @talitman/config
   server.ts            buildServer({ manager, config, logger }) -> FastifyInstance (used by tests)
   routes/instances.ts, routes/messages.ts, routes/media.ts, routes/health.ts
   instance-manager.ts  create/get/list/remove/connect/disconnect; persists definitions at instances/<id>; restore() on boot
@@ -493,11 +493,11 @@ apps/whatsapp-service/src/
 
 ### 9.4 Docker
 
-`apps/whatsapp-service/Dockerfile`: stage 1 `node:22-alpine` with corepack pnpm, copy workspace, `pnpm install --frozen-lockfile`, `pnpm --filter @connectors/whatsapp-service... build`, `pnpm --filter @connectors/whatsapp-service deploy --prod /out`; stage 2 `node:22-alpine`, non-root user, copy `/out`, `ENV DATA_DIR=/data`, `VOLUME /data`, `EXPOSE 3000`, `CMD ["node", "dist/index.js"]`. `docker-compose.yml` at the root builds it and mounts `./data:/data`.
+`apps/whatsapp-service/Dockerfile`: stage 1 `node:22-alpine` with corepack pnpm, copy workspace, `pnpm install --frozen-lockfile`, `pnpm --filter @talitman/whatsapp-service... build`, `pnpm --filter @talitman/whatsapp-service deploy --prod /out`; stage 2 `node:22-alpine`, non-root user, copy `/out`, `ENV DATA_DIR=/data`, `VOLUME /data`, `EXPOSE 3000`, `CMD ["node", "dist/index.js"]`. `docker-compose.yml` at the root builds it and mounts `./data:/data`.
 
 ## 10. `examples/whatsapp-basic`
 
-Private workspace package (`"private": true`), deps: `@connectors/core`, `@connectors/whatsapp`, `@connectors/observability`, `qrcode-terminal`, `tsx` (dev). `src/main.ts`:
+Private workspace package (`"private": true`), deps: `@talitman/core`, `@talitman/whatsapp`, `@talitman/observability`, `qrcode-terminal`, `tsx` (dev). `src/main.ts`:
 
 1. Create `FileStore('./data')` and a pretty logger.
 2. `createWhatsAppConnector({ accountId: 'example', storage: { auth: store }, pairing: PHONE_NUMBER ? { method: 'code', phoneNumber } : { method: 'qr' } })`.
@@ -532,7 +532,7 @@ No test contacts WhatsApp. `FakeWhatsAppClient` records calls and lets tests emi
 
 ## 12. Documentation
 
-- `README.md`: purpose, architecture with Mermaid diagram (consumer app -> `@connectors/whatsapp` -> Baileys -> WhatsApp; service -> webhook consumer), package structure, why connectors are packages, package mode vs service mode, quick start (`pnpm install`, `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm dev`), how pairing works (QR and code, the 515 restart), persistence requirements, privacy summary linking to `docs/privacy.md`, adding a connector linking to `docs/adding-a-connector.md`.
+- `README.md`: purpose, architecture with Mermaid diagram (consumer app -> `@talitman/whatsapp` -> Baileys -> WhatsApp; service -> webhook consumer), package structure, why connectors are packages, package mode vs service mode, quick start (`pnpm install`, `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm dev`), how pairing works (QR and code, the 515 restart), persistence requirements, privacy summary linking to `docs/privacy.md`, adding a connector linking to `docs/adding-a-connector.md`.
 - `docs/privacy.md`: tables for what Baileys stores, what the wrapper stores, outbound connections (host, when, opt-in?), credential location, message/media location, memory-only data (dedupe cache, media cache of raw messages, pairing state), and how to opt into storing messages or media.
 - `docs/adding-a-connector.md`: package skeleton, which core interfaces to implement, the client-adapter pattern, test expectations.
 - `docs/whatsapp-service-api.md`: endpoint reference with request/response examples and webhook payload/signature verification snippet.

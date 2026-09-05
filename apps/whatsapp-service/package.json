@@ -1,8 +1,8 @@
 {
-  "name": "@connectors/whatsapp-service",
+  "name": "@talitman/whatsapp-service",
   "version": "0.1.0",
   "private": true,
-  "description": "Standalone HTTP service wrapping @connectors/whatsapp",
+  "description": "Standalone HTTP service wrapping @talitman/whatsapp",
   "type": "module",
   "engines": {
     "node": ">=20"
@@ -16,10 +16,10 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@connectors/config": "workspace:*",
-    "@connectors/core": "workspace:*",
-    "@connectors/observability": "workspace:*",
-    "@connectors/whatsapp": "workspace:*",
+    "@talitman/config": "workspace:*",
+    "@talitman/core": "workspace:*",
+    "@talitman/observability": "workspace:*",
+    "@talitman/whatsapp": "workspace:*",
     "fastify": "5.12.3",
     "pino": "10.3.1",
     "qrcode": "1.5.4",

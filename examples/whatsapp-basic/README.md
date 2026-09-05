@@ -1,6 +1,6 @@
 # whatsapp-basic
 
-Minimal consumer of `@connectors/whatsapp` in package mode (no HTTP service).
+Minimal consumer of `@talitman/whatsapp` in package mode (no HTTP service).
 
 ## Run
 

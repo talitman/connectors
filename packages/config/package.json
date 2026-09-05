@@ -1,5 +1,5 @@
 {
-  "name": "@connectors/config",
+  "name": "@talitman/config",
   "version": "0.1.0",
   "description": "Environment-based configuration loading with zod",
   "type": "module",
@@ -39,7 +39,7 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@connectors/core": "workspace:*",
+    "@talitman/core": "workspace:*",
     "zod": "4.5.4"
   }
 }

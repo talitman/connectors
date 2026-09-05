@@ -1,5 +1,5 @@
-import type { ConnectorStatus, EventPublisher, Logger, Unsubscribe } from '@connectors/core';
-import type { PairingMethod, WhatsAppConnector } from '@connectors/whatsapp';
+import type { ConnectorStatus, EventPublisher, Logger, Unsubscribe } from '@talitman/core';
+import type { PairingMethod, WhatsAppConnector } from '@talitman/whatsapp';
 
 export interface InstanceDefinition {
   id: string;

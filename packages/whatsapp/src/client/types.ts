@@ -1,5 +1,5 @@
 import type { Readable } from 'node:stream';
-import type { Unsubscribe } from '@connectors/core';
+import type { Unsubscribe } from '@talitman/core';
 import type { MediaKind, OutgoingMedia } from '../types.js';
 
 /** Structural subset of the provider's message shape that this package reads. */

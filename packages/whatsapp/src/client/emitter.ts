@@ -1,4 +1,4 @@
-import type { Unsubscribe } from '@connectors/core';
+import type { Unsubscribe } from '@talitman/core';
 
 type Handler<T> = (payload: T) => void;
 

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/require-await -- fake implements an async interface; methods resolve synchronously by default */
 import { Readable } from 'node:stream';
-import type { ConnectorStatus, EventHandler, Unsubscribe } from '@connectors/core';
+import type { ConnectorStatus, EventHandler, Unsubscribe } from '@talitman/core';
 import type {
   MediaRef,
   MediaSource,
@@ -10,8 +10,8 @@ import type {
   SentMessage,
   WhatsAppConnector,
   WhatsAppEvent,
-} from '@connectors/whatsapp';
-import { MediaUnavailableError, NotConnectedError } from '@connectors/whatsapp';
+} from '@talitman/whatsapp';
+import { MediaUnavailableError, NotConnectedError } from '@talitman/whatsapp';
 
 export class FakeWhatsAppConnector implements WhatsAppConnector {
   readonly name = 'whatsapp' as const;

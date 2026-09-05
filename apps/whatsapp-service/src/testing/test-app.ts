@@ -1,5 +1,5 @@
-import { MemoryStore, noopLogger } from '@connectors/core';
-import { createPinoLogger } from '@connectors/observability';
+import { MemoryStore, noopLogger } from '@talitman/core';
+import { createPinoLogger } from '@talitman/observability';
 import { loadServiceConfig } from '../config.js';
 import { InstanceManager } from '../instance-manager.js';
 import { createPublisherFactory } from '../publishers.js';

@@ -1,4 +1,4 @@
-import { AuthError, ConnectorError } from '@connectors/core';
+import { AuthError, ConnectorError } from '@talitman/core';
 
 export class ConnectionReplacedError extends ConnectorError {
   constructor(cause?: unknown) {

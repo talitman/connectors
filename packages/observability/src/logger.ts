@@ -1,5 +1,5 @@
-import type { LogLevel } from '@connectors/config';
-import type { Logger } from '@connectors/core';
+import type { LogLevel } from '@talitman/config';
+import type { Logger } from '@talitman/core';
 import { pino, type Logger as PinoLogger } from 'pino';
 import { DEFAULT_REDACT_PATHS } from './redact.js';
 

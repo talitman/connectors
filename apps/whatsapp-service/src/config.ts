@@ -5,7 +5,7 @@ import {
   optionalNonEmptyString,
   optionalUrl,
   port,
-} from '@connectors/config';
+} from '@talitman/config';
 import { z } from 'zod';
 
 export const serviceConfigSchema = z.object({

@@ -1,4 +1,4 @@
-import { ConnectorError } from '@connectors/core';
+import { ConnectorError } from '@talitman/core';
 import type { ChatType } from '../types.js';
 
 export const USER_SERVER = 's.whatsapp.net';

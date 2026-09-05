@@ -1,8 +1,8 @@
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { FileStore } from '@connectors/core';
-import { createLogger } from '@connectors/observability';
-import { createWhatsAppConnector } from '@connectors/whatsapp';
+import { FileStore } from '@talitman/core';
+import { createLogger } from '@talitman/observability';
+import { createWhatsAppConnector } from '@talitman/whatsapp';
 import qrcode from 'qrcode-terminal';
 
 const DATA_DIR = process.env.DATA_DIR ?? './data';

@@ -1,4 +1,4 @@
-import { MemoryStore } from '@connectors/core';
+import { MemoryStore } from '@talitman/core';
 import { describe, expect, it } from 'vitest';
 import { createAuthStore } from './auth-state.js';
 

@@ -1,4 +1,4 @@
-import { ConfigError, type KeyValueStore, type Logger } from '@connectors/core';
+import { ConfigError, type KeyValueStore, type Logger } from '@talitman/core';
 import { z } from 'zod';
 import type { WhatsAppConnectorOptions } from './types.js';
 

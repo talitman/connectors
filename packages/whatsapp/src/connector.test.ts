@@ -1,5 +1,5 @@
 import { Readable } from 'node:stream';
-import { MemoryStore, noopLogger } from '@connectors/core';
+import { MemoryStore, noopLogger } from '@talitman/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { RawMessage } from './client/types.js';
 import { createConnectorWithClient } from './connector.js';

@@ -1,4 +1,4 @@
-import { ConfigError } from '@connectors/core';
+import { ConfigError } from '@talitman/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { booleanString, logLevel, port } from './fields.js';

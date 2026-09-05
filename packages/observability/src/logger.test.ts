@@ -1,6 +1,6 @@
 import { Writable } from 'node:stream';
 import { describe, expect, it } from 'vitest';
-import type { Logger } from '@connectors/core';
+import type { Logger } from '@talitman/core';
 import { createLogger } from './logger.js';
 
 function capture() {

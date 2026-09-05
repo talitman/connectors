@@ -6,7 +6,7 @@ import {
   type ConnectorStatus,
   type Logger,
   type Unsubscribe,
-} from '@connectors/core';
+} from '@talitman/core';
 import type { AuthStore, ClientConnectionUpdate, WhatsAppClient } from '../client/types.js';
 import { mapDisconnectError, statusCodeOf } from '../errors.js';
 import type { ResolvedOptions } from '../options.js';

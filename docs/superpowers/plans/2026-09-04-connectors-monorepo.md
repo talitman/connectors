@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a pnpm/Turborepo TypeScript monorepo with a provider-neutral `@connectors/core`, a Baileys-backed `@connectors/whatsapp` connector, a Fastify standalone service with webhook delivery, a runnable example, tests and docs.
+**Goal:** Build a pnpm/Turborepo TypeScript monorepo with a provider-neutral `@talitman/core`, a Baileys-backed `@talitman/whatsapp` connector, a Fastify standalone service with webhook delivery, a runnable example, tests and docs.
 
-**Architecture:** `@connectors/core` holds contracts (lifecycle, events, storage, publishing, errors, logging) with zero runtime deps. `@connectors/whatsapp` implements those contracts and hides Baileys behind an internal `WhatsAppClient` interface so every unit test runs against a fake client. `apps/whatsapp-service` wraps the connector in a small HTTP API and forwards events to per-instance webhooks. Only auth state is persisted; message bodies and media stay in memory.
+**Architecture:** `@talitman/core` holds contracts (lifecycle, events, storage, publishing, errors, logging) with zero runtime deps. `@talitman/whatsapp` implements those contracts and hides Baileys behind an internal `WhatsAppClient` interface so every unit test runs against a fake client. `apps/whatsapp-service` wraps the connector in a small HTTP API and forwards events to per-instance webhooks. Only auth state is persisted; message bodies and media stay in memory.
 
 **Tech Stack:** Node >= 20 (dev on 26), TypeScript 6.0.3, pnpm 11, Turborepo 2.10, Vitest 4.1, ESLint 10 + typescript-eslint 8, Prettier 3, Zod 4.5, pino 10, Fastify 5.12, baileys 7.0.0-rc14, tsx, Docker.
 
@@ -15,15 +15,15 @@
 - ESM only everywhere: every `package.json` has `"type": "module"`; imports of local files use the `.js` extension (TypeScript `NodeNext`).
 - Strict TypeScript: `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax` from `tsconfig.base.json`. Never add `// @ts-ignore`; use narrow casts with a comment when crossing the Baileys boundary.
 - Only `packages/whatsapp/src/client/baileys-client.ts` may import `baileys`. Everything else in the WhatsApp package uses the structural types in `client/types.ts`.
-- `@connectors/core` has no runtime dependencies. `@connectors/config` depends only on core and zod. `@connectors/observability` depends only on core, pino and pino-pretty.
-- `@connectors/whatsapp` must not import anything from `apps/`.
+- `@talitman/core` has no runtime dependencies. `@talitman/config` depends only on core and zod. `@talitman/observability` depends only on core, pino and pino-pretty.
+- `@talitman/whatsapp` must not import anything from `apps/`.
 - No network calls in tests. No real WhatsApp account. Webhook tests inject a fake `fetch`.
 - Sensitive auth state must never be logged. Loggers passed to Baileys are children of the redacting logger at level `warn` by default.
 - Nothing but auth state is written to storage by the connector. Media and message bodies are memory only unless the consumer writes them.
 - Single version per third-party dependency across the workspace (pinned exact versions listed in Task 1).
 - Prettier is the formatter of record: run `pnpm format` before `pnpm lint` in every task. Code in this plan is not guaranteed to be Prettier-formatted as typed.
 - Every task ends with `pnpm typecheck`, the task's tests passing, `pnpm lint` clean, and a commit. Commit messages end with the two trailer lines shown in Task 1 Step 8.
-- Package names: `@connectors/core`, `@connectors/config`, `@connectors/observability`, `@connectors/whatsapp`, `@connectors/whatsapp-service`, `@connectors/example-whatsapp-basic`.
+- Package names: `@talitman/core`, `@talitman/config`, `@talitman/observability`, `@talitman/whatsapp`, `@talitman/whatsapp-service`, `@talitman/example-whatsapp-basic`.
 
 ---
 
@@ -99,7 +99,7 @@ connectors/
 - Create: `packages/core/package.json`, `packages/core/tsconfig.json`, `packages/core/tsconfig.build.json`, `packages/core/vitest.config.ts`, `packages/core/src/index.ts`, `packages/core/src/sleep.ts`, `packages/core/src/sleep.test.ts`
 
 **Interfaces:**
-- Produces: `sleep(ms: number, signal?: AbortSignal): Promise<void>` exported from `@connectors/core`; the package template every later package copies.
+- Produces: `sleep(ms: number, signal?: AbortSignal): Promise<void>` exported from `@talitman/core`; the package template every later package copies.
 
 - [ ] **Step 1: Write root workspace files**
 
@@ -275,7 +275,7 @@ export default defineConfig({
 
 ```json
 {
-  "name": "@connectors/core",
+  "name": "@talitman/core",
   "version": "0.1.0",
   "description": "Shared contracts for connectors: lifecycle, events, storage, publishing, errors, logging",
   "type": "module",
@@ -357,7 +357,7 @@ describe('sleep', () => {
 
 - [ ] **Step 4: Install and run the test to see it fail**
 
-Run: `pnpm install && pnpm --filter @connectors/core test`
+Run: `pnpm install && pnpm --filter @talitman/core test`
 Expected: install succeeds without peer warnings about sharp; the test FAILS with "Cannot find module './sleep.js'".
 
 - [ ] **Step 5: Implement sleep and the index**
@@ -397,7 +397,7 @@ Expected: all four succeed; `packages/core/dist/index.js` and `index.d.ts` exist
 
 - [ ] **Step 7: Verify the ESM/exports boundary**
 
-Run: `node -e "import('@connectors/core').then(m => console.log(Object.keys(m)))" --input-type=module` from `packages/core` (or `node --input-type=module -e "..."`).
+Run: `node -e "import('@talitman/core').then(m => console.log(Object.keys(m)))" --input-type=module` from `packages/core` (or `node --input-type=module -e "..."`).
 Expected: prints `[ 'sleep' ]`.
 
 - [ ] **Step 8: Commit**
@@ -531,7 +531,7 @@ describe('EventDeduplicator', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `pnpm --filter @connectors/core test`
+Run: `pnpm --filter @talitman/core test`
 Expected: FAIL, modules not found.
 
 - [ ] **Step 3: Implement**
@@ -726,7 +726,7 @@ export type { EventDeduplicatorOptions } from './dedupe.js';
 
 - [ ] **Step 4: Run tests, typecheck, lint**
 
-Run: `pnpm --filter @connectors/core test && pnpm typecheck && pnpm lint`
+Run: `pnpm --filter @talitman/core test && pnpm typecheck && pnpm lint`
 Expected: all PASS.
 
 - [ ] **Step 5: Commit**
@@ -916,7 +916,7 @@ describe('jsonCodec', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `pnpm --filter @connectors/core test`
+Run: `pnpm --filter @talitman/core test`
 Expected: FAIL, modules not found.
 
 - [ ] **Step 3: Implement**
@@ -1147,7 +1147,7 @@ export { MemoryStore } from './storage/memory-store.js';
 
 - [ ] **Step 4: Run tests, typecheck, lint**
 
-Run: `pnpm --filter @connectors/core test && pnpm typecheck && pnpm lint`
+Run: `pnpm --filter @talitman/core test && pnpm typecheck && pnpm lint`
 Expected: PASS. If ESLint flags `require-await` on the async MemoryStore methods, keep them `async` (the interface returns promises) and disable `@typescript-eslint/require-await` for that file with a one-line comment explaining why.
 
 - [ ] **Step 5: Commit**
@@ -1223,7 +1223,7 @@ describe('FileStore specifics', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `pnpm --filter @connectors/core test -- file-store`
+Run: `pnpm --filter @talitman/core test -- file-store`
 Expected: FAIL, module not found.
 
 - [ ] **Step 3: Implement**
@@ -1347,7 +1347,7 @@ export { FileStore, decodeSegment, encodeSegment } from './storage/file-store.js
 
 - [ ] **Step 4: Run tests, typecheck, lint**
 
-Run: `pnpm --filter @connectors/core test && pnpm typecheck && pnpm lint`
+Run: `pnpm --filter @talitman/core test && pnpm typecheck && pnpm lint`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
@@ -1474,7 +1474,7 @@ describe('createWebhookPublisher', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `pnpm --filter @connectors/core test -- webhook`
+Run: `pnpm --filter @talitman/core test -- webhook`
 Expected: FAIL, module not found.
 
 - [ ] **Step 3: Implement**
@@ -1585,7 +1585,7 @@ export type { WebhookPublisherOptions } from './publishers/webhook.js';
 
 - [ ] **Step 4: Run tests, typecheck, lint**
 
-Run: `pnpm --filter @connectors/core test && pnpm typecheck && pnpm lint`
+Run: `pnpm --filter @talitman/core test && pnpm typecheck && pnpm lint`
 Expected: PASS. Note: the `details` object in the `lastStatus` test must contain `lastStatus: 503`; since `exactOptionalPropertyTypes` is on, build the details object without `undefined` values if lint complains.
 
 - [ ] **Step 5: Commit**
@@ -1600,7 +1600,7 @@ Claude-Session: https://claude.ai/code/session_01UjULQEvZegHS99tGo4BBDk"
 
 ---
 
-### Task 6: `@connectors/config`
+### Task 6: `@talitman/config`
 
 **Files:**
 - Create: `packages/config/package.json`, `packages/config/tsconfig.json`, `packages/config/tsconfig.build.json`, `packages/config/vitest.config.ts`, `packages/config/src/index.ts`, `packages/config/src/load-config.ts`, `packages/config/src/load-config.test.ts`, `packages/config/src/fields.ts`, `packages/config/src/fields.test.ts`
@@ -1615,7 +1615,7 @@ Claude-Session: https://claude.ai/code/session_01UjULQEvZegHS99tGo4BBDk"
 
 ```json
 {
-  "name": "@connectors/config",
+  "name": "@talitman/config",
   "version": "0.1.0",
   "description": "Environment-based configuration loading with zod",
   "type": "module",
@@ -1631,7 +1631,7 @@ Claude-Session: https://claude.ai/code/session_01UjULQEvZegHS99tGo4BBDk"
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@connectors/core": "workspace:*",
+    "@talitman/core": "workspace:*",
     "zod": "4.5.4"
   }
 }
@@ -1644,7 +1644,7 @@ Copy `tsconfig.json`, `tsconfig.build.json`, `vitest.config.ts` verbatim from `p
 `packages/config/src/load-config.test.ts`:
 
 ```ts
-import { ConfigError } from '@connectors/core';
+import { ConfigError } from '@talitman/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { booleanString, logLevel, port } from './fields.js';
@@ -1718,7 +1718,7 @@ describe('fields', () => {
 
 - [ ] **Step 3: Run tests to verify they fail**
 
-Run: `pnpm install && pnpm --filter @connectors/config test`
+Run: `pnpm install && pnpm --filter @talitman/config test`
 Expected: FAIL, modules not found.
 
 - [ ] **Step 4: Implement**
@@ -1760,7 +1760,7 @@ export const optionalNonEmptyString = z.string().min(1).optional();
 `packages/config/src/load-config.ts`:
 
 ```ts
-import { ConfigError } from '@connectors/core';
+import { ConfigError } from '@talitman/core';
 import type { z } from 'zod';
 
 export function loadConfig<T extends z.ZodType>(
@@ -1797,8 +1797,8 @@ export type { LogLevel } from './fields.js';
 
 - [ ] **Step 5: Run tests, typecheck, lint**
 
-Run: `pnpm build && pnpm --filter @connectors/config test && pnpm typecheck && pnpm lint`
-Expected: PASS. (`build` first so `@connectors/core` types resolve from `dist`.)
+Run: `pnpm build && pnpm --filter @talitman/config test && pnpm typecheck && pnpm lint`
+Expected: PASS. (`build` first so `@talitman/core` types resolve from `dist`.)
 
 - [ ] **Step 6: Commit**
 
@@ -1812,7 +1812,7 @@ Claude-Session: https://claude.ai/code/session_01UjULQEvZegHS99tGo4BBDk"
 
 ---
 
-### Task 7: `@connectors/observability`
+### Task 7: `@talitman/observability`
 
 **Files:**
 - Create: `packages/observability/package.json`, `tsconfig.json`, `tsconfig.build.json`, `vitest.config.ts`, `src/index.ts`, `src/redact.ts`, `src/logger.ts`, `src/logger.test.ts`
@@ -1827,7 +1827,7 @@ Claude-Session: https://claude.ai/code/session_01UjULQEvZegHS99tGo4BBDk"
 
 ```json
 {
-  "name": "@connectors/observability",
+  "name": "@talitman/observability",
   "version": "0.1.0",
   "description": "Structured logging with secret redaction",
   "type": "module",
@@ -1843,8 +1843,8 @@ Claude-Session: https://claude.ai/code/session_01UjULQEvZegHS99tGo4BBDk"
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@connectors/config": "workspace:*",
-    "@connectors/core": "workspace:*",
+    "@talitman/config": "workspace:*",
+    "@talitman/core": "workspace:*",
     "pino": "10.3.1",
     "pino-pretty": "13.1.3"
   }
@@ -1860,7 +1860,7 @@ Copy the three tsconfig/vitest files from core.
 ```ts
 import { Writable } from 'node:stream';
 import { describe, expect, it } from 'vitest';
-import type { Logger } from '@connectors/core';
+import type { Logger } from '@talitman/core';
 import { createLogger } from './logger.js';
 
 function capture() {
@@ -1928,7 +1928,7 @@ describe('createLogger', () => {
 
 - [ ] **Step 3: Run test to verify it fails**
 
-Run: `pnpm install && pnpm --filter @connectors/observability test`
+Run: `pnpm install && pnpm --filter @talitman/observability test`
 Expected: FAIL, module not found.
 
 - [ ] **Step 4: Implement**
@@ -1963,8 +1963,8 @@ export const DEFAULT_REDACT_PATHS: readonly string[] = [
 `packages/observability/src/logger.ts`:
 
 ```ts
-import type { LogLevel } from '@connectors/config';
-import type { Logger } from '@connectors/core';
+import type { LogLevel } from '@talitman/config';
+import type { Logger } from '@talitman/core';
 import { pino, type Logger as PinoLogger } from 'pino';
 import { DEFAULT_REDACT_PATHS } from './redact.js';
 
@@ -2006,7 +2006,7 @@ export { DEFAULT_REDACT_PATHS } from './redact.js';
 
 - [ ] **Step 5: Run tests, typecheck, lint**
 
-Run: `pnpm build && pnpm --filter @connectors/observability test && pnpm typecheck && pnpm lint`
+Run: `pnpm build && pnpm --filter @talitman/observability test && pnpm typecheck && pnpm lint`
 Expected: PASS. If `createLogger` fails to typecheck because pino's `Logger` is not assignable to core `Logger`, wrap it: `return createPinoLogger(options) as unknown as Logger;` is NOT acceptable; instead adjust core's `LogFn` overloads to match pino's `(obj: object, msg?: string, ...args: unknown[])` and `(msg: string, ...args: unknown[])` signatures and re-run core tests.
 
 - [ ] **Step 6: Commit**
@@ -2039,7 +2039,7 @@ Claude-Session: https://claude.ai/code/session_01UjULQEvZegHS99tGo4BBDk"
 
 ```json
 {
-  "name": "@connectors/whatsapp",
+  "name": "@talitman/whatsapp",
   "version": "0.1.0",
   "description": "Self-hosted WhatsApp connector (Baileys) exposing normalized events",
   "type": "module",
@@ -2055,7 +2055,7 @@ Claude-Session: https://claude.ai/code/session_01UjULQEvZegHS99tGo4BBDk"
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@connectors/core": "workspace:*",
+    "@talitman/core": "workspace:*",
     "baileys": "7.0.0-rc14",
     "zod": "4.5.4"
   }
@@ -2078,7 +2078,7 @@ import type {
   KeyValueStore,
   Logger,
   Unsubscribe,
-} from '@connectors/core';
+} from '@talitman/core';
 
 export type WhatsAppLogLevel = 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace' | 'silent';
 
@@ -2223,7 +2223,7 @@ export interface WhatsAppConnector extends Connector, EventSource<WhatsAppEvent>
 `packages/whatsapp/src/options.test.ts`:
 
 ```ts
-import { ConfigError, MemoryStore } from '@connectors/core';
+import { ConfigError, MemoryStore } from '@talitman/core';
 import { describe, expect, it } from 'vitest';
 import { resolveOptions } from './options.js';
 
@@ -2275,7 +2275,7 @@ describe('resolveOptions', () => {
 `packages/whatsapp/src/errors.test.ts`:
 
 ```ts
-import { AuthError } from '@connectors/core';
+import { AuthError } from '@talitman/core';
 import { describe, expect, it } from 'vitest';
 import { ConnectionReplacedError, mapDisconnectError, statusCodeOf } from './errors.js';
 
@@ -2312,7 +2312,7 @@ describe('statusCodeOf', () => {
 
 - [ ] **Step 4: Run tests to verify they fail**
 
-Run: `pnpm install && pnpm --filter @connectors/whatsapp test`
+Run: `pnpm install && pnpm --filter @talitman/whatsapp test`
 Expected: FAIL, modules not found.
 
 - [ ] **Step 5: Implement options and errors**
@@ -2320,7 +2320,7 @@ Expected: FAIL, modules not found.
 `packages/whatsapp/src/options.ts`:
 
 ```ts
-import { ConfigError, type KeyValueStore, type Logger } from '@connectors/core';
+import { ConfigError, type KeyValueStore, type Logger } from '@talitman/core';
 import { z } from 'zod';
 import type { WhatsAppConnectorOptions } from './types.js';
 
@@ -2379,7 +2379,7 @@ export function resolveOptions(input: WhatsAppConnectorOptions): ResolvedOptions
 `packages/whatsapp/src/errors.ts`:
 
 ```ts
-import { AuthError, ConnectorError } from '@connectors/core';
+import { AuthError, ConnectorError } from '@talitman/core';
 
 export class ConnectionReplacedError extends ConnectorError {
   constructor(cause?: unknown) {
@@ -2459,7 +2459,7 @@ export type { MediaUnavailableReason } from './errors.js';
 
 - [ ] **Step 6: Run tests, typecheck, lint**
 
-Run: `pnpm build && pnpm --filter @connectors/whatsapp test && pnpm typecheck && pnpm lint`
+Run: `pnpm build && pnpm --filter @talitman/whatsapp test && pnpm typecheck && pnpm lint`
 Expected: PASS. Confirm `pnpm install` printed no warning about missing `sharp`.
 
 - [ ] **Step 7: Commit**
@@ -2525,7 +2525,7 @@ describe('TypedEmitter', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `pnpm --filter @connectors/whatsapp test -- emitter`
+Run: `pnpm --filter @talitman/whatsapp test -- emitter`
 Expected: FAIL, module not found.
 
 - [ ] **Step 3: Implement the emitter, client types and fake client**
@@ -2533,7 +2533,7 @@ Expected: FAIL, module not found.
 `packages/whatsapp/src/client/emitter.ts`:
 
 ```ts
-import type { Unsubscribe } from '@connectors/core';
+import type { Unsubscribe } from '@talitman/core';
 
 type Handler<T> = (payload: T) => void;
 
@@ -2579,7 +2579,7 @@ export class TypedEmitter<Map extends Record<string, unknown>> {
 
 ```ts
 import type { Readable } from 'node:stream';
-import type { Unsubscribe } from '@connectors/core';
+import type { Unsubscribe } from '@talitman/core';
 import type { MediaKind, OutgoingMedia } from '../types.js';
 
 /** Structural subset of the provider's message shape that this package reads. */
@@ -2738,7 +2738,7 @@ export type WhatsAppClientFactory = () => WhatsAppClient;
 
 ```ts
 import { Readable } from 'node:stream';
-import type { Unsubscribe } from '@connectors/core';
+import type { Unsubscribe } from '@talitman/core';
 import type { OutgoingMedia } from '../types.js';
 import { TypedEmitter } from '../client/emitter.js';
 import type {
@@ -2851,7 +2851,7 @@ export class FakeWhatsAppClient implements WhatsAppClient {
 
 - [ ] **Step 4: Run tests, typecheck, lint**
 
-Run: `pnpm --filter @connectors/whatsapp test && pnpm typecheck && pnpm lint`
+Run: `pnpm --filter @talitman/whatsapp test && pnpm typecheck && pnpm lint`
 Expected: PASS (fake client is only type-checked here; it is exercised from Task 12 on).
 
 - [ ] **Step 5: Commit**
@@ -2922,7 +2922,7 @@ describe('auth serializer', () => {
 `packages/whatsapp/src/auth/auth-state.test.ts`:
 
 ```ts
-import { MemoryStore } from '@connectors/core';
+import { MemoryStore } from '@talitman/core';
 import { describe, expect, it } from 'vitest';
 import { createAuthStore } from './auth-state.js';
 
@@ -2980,7 +2980,7 @@ describe('createAuthStore', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `pnpm --filter @connectors/whatsapp test -- auth`
+Run: `pnpm --filter @talitman/whatsapp test -- auth`
 Expected: FAIL, modules not found.
 
 - [ ] **Step 3: Implement**
@@ -3033,7 +3033,7 @@ export function decodeAuthValue(bytes: Uint8Array): unknown {
 `packages/whatsapp/src/auth/auth-state.ts`:
 
 ```ts
-import type { KeyValueStore } from '@connectors/core';
+import type { KeyValueStore } from '@talitman/core';
 import type { AuthStore } from '../client/types.js';
 import { decodeAuthValue, encodeAuthValue } from './serializer.js';
 
@@ -3085,7 +3085,7 @@ export function createAuthStore(store: KeyValueStore): AuthStore {
 
 - [ ] **Step 4: Run tests, typecheck, lint**
 
-Run: `pnpm --filter @connectors/whatsapp test && pnpm typecheck && pnpm lint`
+Run: `pnpm --filter @talitman/whatsapp test && pnpm typecheck && pnpm lint`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
@@ -3333,7 +3333,7 @@ describe('extractMediaDescriptor', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `pnpm --filter @connectors/whatsapp test -- normalize`
+Run: `pnpm --filter @talitman/whatsapp test -- normalize`
 Expected: FAIL, modules not found.
 
 - [ ] **Step 3: Implement**
@@ -3341,7 +3341,7 @@ Expected: FAIL, modules not found.
 `packages/whatsapp/src/normalize/jid.ts`:
 
 ```ts
-import { ConnectorError } from '@connectors/core';
+import { ConnectorError } from '@talitman/core';
 import type { ChatType } from '../types.js';
 
 export const USER_SERVER = 's.whatsapp.net';
@@ -3634,7 +3634,7 @@ Note the circular import between `media/descriptor.ts` and `normalize/message.ts
 
 - [ ] **Step 4: Run tests, typecheck, lint**
 
-Run: `pnpm --filter @connectors/whatsapp test && pnpm typecheck && pnpm lint`
+Run: `pnpm --filter @talitman/whatsapp test && pnpm typecheck && pnpm lint`
 Expected: PASS. In the "ephemeral" test the `ephemeralExpirationSeconds` becomes `0` for an ephemeral wrapper without explicit expiration; the test only asserts content, so this is fine.
 
 - [ ] **Step 5: Commit**
@@ -3800,7 +3800,7 @@ describe('streamToFile', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `pnpm --filter @connectors/whatsapp test -- media`
+Run: `pnpm --filter @talitman/whatsapp test -- media`
 Expected: FAIL, modules not found.
 
 - [ ] **Step 3: Implement**
@@ -3928,7 +3928,7 @@ export async function streamToFile(stream: Readable, filePath: string): Promise<
 
 - [ ] **Step 4: Run tests, typecheck, lint**
 
-Run: `pnpm --filter @connectors/whatsapp test && pnpm typecheck && pnpm lint`
+Run: `pnpm --filter @talitman/whatsapp test && pnpm typecheck && pnpm lint`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
@@ -3984,7 +3984,7 @@ describe('policyFor', () => {
 `packages/whatsapp/src/connection/state-machine.test.ts`:
 
 ```ts
-import { MemoryStore, noopLogger } from '@connectors/core';
+import { MemoryStore, noopLogger } from '@talitman/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createAuthStore } from '../auth/auth-state.js';
 import { resolveOptions } from '../options.js';
@@ -4178,7 +4178,7 @@ describe('ConnectionManager', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `pnpm --filter @connectors/whatsapp test -- connection`
+Run: `pnpm --filter @talitman/whatsapp test -- connection`
 Expected: FAIL, modules not found.
 
 - [ ] **Step 3: Implement**
@@ -4220,7 +4220,7 @@ import {
   type ConnectorStatus,
   type Logger,
   type Unsubscribe,
-} from '@connectors/core';
+} from '@talitman/core';
 import type { AuthStore, ClientConnectionUpdate, WhatsAppClient } from '../client/types.js';
 import { mapDisconnectError, statusCodeOf } from '../errors.js';
 import type { ResolvedOptions } from '../options.js';
@@ -4436,7 +4436,7 @@ export class ConnectionManager {
 
 - [ ] **Step 4: Run tests, typecheck, lint**
 
-Run: `pnpm --filter @connectors/whatsapp test && pnpm typecheck && pnpm lint`
+Run: `pnpm --filter @talitman/whatsapp test && pnpm typecheck && pnpm lint`
 Expected: PASS. If a timing test is flaky, the culprit is usually a missing `await flush()` after emitting a close (handleClose is async); add it rather than loosening assertions.
 
 - [ ] **Step 5: Commit**
@@ -4490,7 +4490,7 @@ In `packages/whatsapp/src/testing/fake-client.ts`, add a field and method:
 
 ```ts
 import { Readable } from 'node:stream';
-import { MemoryStore, noopLogger } from '@connectors/core';
+import { MemoryStore, noopLogger } from '@talitman/core';
 import { describe, expect, it } from 'vitest';
 import type { RawMessage } from './client/types.js';
 import { createConnectorWithClient } from './connector.js';
@@ -4676,7 +4676,7 @@ describe('WhatsApp connector', () => {
 
 - [ ] **Step 3: Run tests to verify they fail**
 
-Run: `pnpm --filter @connectors/whatsapp test -- connector`
+Run: `pnpm --filter @talitman/whatsapp test -- connector`
 Expected: FAIL, module not found.
 
 - [ ] **Step 4: Implement**
@@ -4696,7 +4696,7 @@ import {
   type EventHandler,
   type Logger,
   type Unsubscribe,
-} from '@connectors/core';
+} from '@talitman/core';
 import { createAuthStore } from './auth/auth-state.js';
 import type { ClientMessageBatch, RawMessage, WhatsAppClient } from './client/types.js';
 import { ConnectionManager } from './connection/state-machine.js';
@@ -4931,7 +4931,7 @@ export function createWhatsAppConnector(options: WhatsAppConnectorOptions): What
 
 - [ ] **Step 5: Run tests, typecheck, lint**
 
-Run: `pnpm --filter @connectors/whatsapp test && pnpm typecheck && pnpm lint`
+Run: `pnpm --filter @talitman/whatsapp test && pnpm typecheck && pnpm lint`
 Expected: PASS.
 
 - [ ] **Step 6: Commit**
@@ -4966,7 +4966,7 @@ Claude-Session: https://claude.ai/code/session_01UjULQEvZegHS99tGo4BBDk"
 ```ts
 import { Readable } from 'node:stream';
 import { describe, expect, it, vi } from 'vitest';
-import type { Logger } from '@connectors/core';
+import type { Logger } from '@talitman/core';
 import { browserTuple, toOutgoingContent, toProviderLogger } from './baileys-mapping.js';
 
 function spyLogger(): Logger & { calls: string[] } {
@@ -5017,7 +5017,7 @@ describe('toOutgoingContent', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `pnpm --filter @connectors/whatsapp test -- baileys-mapping`
+Run: `pnpm --filter @talitman/whatsapp test -- baileys-mapping`
 Expected: FAIL, module not found.
 
 - [ ] **Step 3: Implement the mapping module**
@@ -5025,7 +5025,7 @@ Expected: FAIL, module not found.
 `packages/whatsapp/src/client/baileys-mapping.ts`:
 
 ```ts
-import type { Logger } from '@connectors/core';
+import type { Logger } from '@talitman/core';
 import type { ResolvedOptions } from '../options.js';
 import type { OutgoingMedia, WhatsAppLogLevel } from '../types.js';
 
@@ -5106,7 +5106,7 @@ export function toOutgoingContent(media: OutgoingMedia): Record<string, unknown>
 
 ```ts
 import type { Readable } from 'node:stream';
-import { nonRetryable, type Logger, type Unsubscribe } from '@connectors/core';
+import { nonRetryable, type Logger, type Unsubscribe } from '@talitman/core';
 import makeWASocket, {
   Browsers,
   downloadContentFromMessage,
@@ -5308,12 +5308,12 @@ export function createWhatsAppConnector(options: WhatsAppConnectorOptions): What
 
 - [ ] **Step 5: Typecheck against the real Baileys types, then test and lint**
 
-Run: `pnpm build && pnpm --filter @connectors/whatsapp test && pnpm typecheck && pnpm lint`
+Run: `pnpm build && pnpm --filter @talitman/whatsapp test && pnpm typecheck && pnpm lint`
 Expected: PASS. Type errors here are expected on first pass because Baileys' types are the ground truth; fix them at the boundary in `baileys-client.ts` only. Known spots: `keys.get` generic (use the signature shown), `sendMessage` third argument (`MiscMessageGenerationOptions`), and `downloadContentFromMessage`'s `DownloadableMessage` accepting `null` for `url`.
 
 - [ ] **Step 6: Smoke-import the built package**
 
-Run from repo root: `node --input-type=module -e "import('@connectors/whatsapp').then(m => console.log(typeof m.createWhatsAppConnector))"` executed inside `packages/whatsapp` (`cd packages/whatsapp && node --input-type=module -e "..."`).
+Run from repo root: `node --input-type=module -e "import('@talitman/whatsapp').then(m => console.log(typeof m.createWhatsAppConnector))"` executed inside `packages/whatsapp` (`cd packages/whatsapp && node --input-type=module -e "..."`).
 Expected: prints `function` with no warnings about missing optional modules.
 
 - [ ] **Step 7: Confirm the boundary rule**
@@ -5353,10 +5353,10 @@ Claude-Session: https://claude.ai/code/session_01UjULQEvZegHS99tGo4BBDk"
 
 ```json
 {
-  "name": "@connectors/whatsapp-service",
+  "name": "@talitman/whatsapp-service",
   "version": "0.1.0",
   "private": true,
-  "description": "Standalone HTTP service wrapping @connectors/whatsapp",
+  "description": "Standalone HTTP service wrapping @talitman/whatsapp",
   "type": "module",
   "engines": { "node": ">=20" },
   "scripts": {
@@ -5368,10 +5368,10 @@ Claude-Session: https://claude.ai/code/session_01UjULQEvZegHS99tGo4BBDk"
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@connectors/config": "workspace:*",
-    "@connectors/core": "workspace:*",
-    "@connectors/observability": "workspace:*",
-    "@connectors/whatsapp": "workspace:*",
+    "@talitman/config": "workspace:*",
+    "@talitman/core": "workspace:*",
+    "@talitman/observability": "workspace:*",
+    "@talitman/whatsapp": "workspace:*",
     "fastify": "5.12.3",
     "pino": "10.3.1",
     "qrcode": "1.5.4",
@@ -5391,7 +5391,7 @@ Copy `tsconfig.json`, `tsconfig.build.json`, `vitest.config.ts` from `packages/c
 `apps/whatsapp-service/src/config.test.ts`:
 
 ```ts
-import { ConfigError } from '@connectors/core';
+import { ConfigError } from '@talitman/core';
 import { describe, expect, it } from 'vitest';
 import { loadServiceConfig } from './config.js';
 
@@ -5422,8 +5422,8 @@ describe('loadServiceConfig', () => {
 `apps/whatsapp-service/src/errors.test.ts`:
 
 ```ts
-import { AuthError, ConfigError, ConnectorError } from '@connectors/core';
-import { MediaUnavailableError, NotConnectedError } from '@connectors/whatsapp';
+import { AuthError, ConfigError, ConnectorError } from '@talitman/core';
+import { MediaUnavailableError, NotConnectedError } from '@talitman/whatsapp';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { ConflictError, NotFoundError, ValidationError, parseWith, toHttpError } from './errors.js';
@@ -5467,7 +5467,7 @@ describe('parseWith', () => {
 import { describe, expect, it } from 'vitest';
 import { loadServiceConfig } from './config.js';
 import { buildServer } from './server.js';
-import { createPinoLogger } from '@connectors/observability';
+import { createPinoLogger } from '@talitman/observability';
 import { FakeWhatsAppConnector } from './testing/fake-connector.js';
 
 function app(env: Record<string, string> = {}, instances: FakeWhatsAppConnector[] = []) {
@@ -5511,7 +5511,7 @@ describe('server basics', () => {
 
 - [ ] **Step 3: Run tests to verify they fail**
 
-Run: `pnpm install && pnpm --filter @connectors/whatsapp-service test`
+Run: `pnpm install && pnpm --filter @talitman/whatsapp-service test`
 Expected: FAIL, modules not found.
 
 - [ ] **Step 4: Implement**
@@ -5519,7 +5519,7 @@ Expected: FAIL, modules not found.
 `apps/whatsapp-service/src/config.ts`:
 
 ```ts
-import { booleanString, loadConfig, logLevel, optionalNonEmptyString, optionalUrl, port } from '@connectors/config';
+import { booleanString, loadConfig, logLevel, optionalNonEmptyString, optionalUrl, port } from '@talitman/config';
 import { z } from 'zod';
 
 export const serviceConfigSchema = z.object({
@@ -5544,7 +5544,7 @@ export function loadServiceConfig(env: Record<string, string | undefined> = proc
 `apps/whatsapp-service/src/errors.ts`:
 
 ```ts
-import { ConnectorError } from '@connectors/core';
+import { ConnectorError } from '@talitman/core';
 import type { z } from 'zod';
 
 export class HttpError extends Error {
@@ -5657,7 +5657,7 @@ export function healthRoutes(app: FastifyInstance, manager: InstanceManagerLike)
 `apps/whatsapp-service/src/server.ts` (routes for instances, messages and media are registered in Tasks 17 and 18; leave the two commented registration lines in place now so the diff later is one line each):
 
 ```ts
-import type { WhatsAppConnector } from '@connectors/whatsapp';
+import type { WhatsAppConnector } from '@talitman/whatsapp';
 import Fastify, { type FastifyInstance } from 'fastify';
 import type { Logger as PinoLogger } from 'pino';
 import { apiKeyHook } from './auth-hook.js';
@@ -5705,7 +5705,7 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
 
 ```ts
 import { Readable } from 'node:stream';
-import type { ConnectorStatus, EventHandler, Unsubscribe } from '@connectors/core';
+import type { ConnectorStatus, EventHandler, Unsubscribe } from '@talitman/core';
 import type {
   MediaRef,
   MediaSource,
@@ -5715,8 +5715,8 @@ import type {
   SentMessage,
   WhatsAppConnector,
   WhatsAppEvent,
-} from '@connectors/whatsapp';
-import { MediaUnavailableError, NotConnectedError } from '@connectors/whatsapp';
+} from '@talitman/whatsapp';
+import { MediaUnavailableError, NotConnectedError } from '@talitman/whatsapp';
 
 export class FakeWhatsAppConnector implements WhatsAppConnector {
   readonly name = 'whatsapp' as const;
@@ -5810,7 +5810,7 @@ export class FakeWhatsAppConnector implements WhatsAppConnector {
 
 - [ ] **Step 5: Run tests, typecheck, lint**
 
-Run: `pnpm build && pnpm --filter @connectors/whatsapp-service test && pnpm typecheck && pnpm lint`
+Run: `pnpm build && pnpm --filter @talitman/whatsapp-service test && pnpm typecheck && pnpm lint`
 Expected: PASS.
 
 - [ ] **Step 6: Commit**
@@ -5847,7 +5847,7 @@ Claude-Session: https://claude.ai/code/session_01UjULQEvZegHS99tGo4BBDk"
 `apps/whatsapp-service/src/instance-manager.test.ts`:
 
 ```ts
-import { MemoryStore, jsonCodec, noopLogger, type ConnectorEvent, type EventPublisher } from '@connectors/core';
+import { MemoryStore, jsonCodec, noopLogger, type ConnectorEvent, type EventPublisher } from '@talitman/core';
 import { describe, expect, it } from 'vitest';
 import { InstanceManager, type InstanceDefinition } from './instance-manager.js';
 import { FakeWhatsAppConnector } from './testing/fake-connector.js';
@@ -5952,7 +5952,7 @@ describe('InstanceManager', () => {
 `apps/whatsapp-service/src/publishers.test.ts`:
 
 ```ts
-import { noopLogger } from '@connectors/core';
+import { noopLogger } from '@talitman/core';
 import { describe, expect, it } from 'vitest';
 import { createPublisherFactory } from './publishers.js';
 
@@ -5976,8 +5976,8 @@ describe('createPublisherFactory', () => {
 `apps/whatsapp-service/src/routes/instances.test.ts`:
 
 ```ts
-import { MemoryStore, noopLogger } from '@connectors/core';
-import { createPinoLogger } from '@connectors/observability';
+import { MemoryStore, noopLogger } from '@talitman/core';
+import { createPinoLogger } from '@talitman/observability';
 import { describe, expect, it } from 'vitest';
 import { loadServiceConfig } from '../config.js';
 import { InstanceManager } from '../instance-manager.js';
@@ -6056,7 +6056,7 @@ describe('instance routes', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `pnpm --filter @connectors/whatsapp-service test`
+Run: `pnpm --filter @talitman/whatsapp-service test`
 Expected: FAIL, modules not found.
 
 - [ ] **Step 3: Implement**
@@ -6064,8 +6064,8 @@ Expected: FAIL, modules not found.
 `apps/whatsapp-service/src/instance.ts`:
 
 ```ts
-import type { ConnectorStatus, EventPublisher, Logger, Unsubscribe } from '@connectors/core';
-import type { PairingMethod, WhatsAppConnector } from '@connectors/whatsapp';
+import type { ConnectorStatus, EventPublisher, Logger, Unsubscribe } from '@talitman/core';
+import type { PairingMethod, WhatsAppConnector } from '@talitman/whatsapp';
 
 export interface InstanceDefinition {
   id: string;
@@ -6127,8 +6127,8 @@ export class Instance {
 
 ```ts
 import { randomUUID } from 'node:crypto';
-import { jsonCodec, namespaced, type EventPublisher, type KeyValueStore, type Logger } from '@connectors/core';
-import type { PairingMethod, WhatsAppConnector } from '@connectors/whatsapp';
+import { jsonCodec, namespaced, type EventPublisher, type KeyValueStore, type Logger } from '@talitman/core';
+import type { PairingMethod, WhatsAppConnector } from '@talitman/whatsapp';
 import { ConflictError, NotFoundError, ValidationError } from './errors.js';
 import { Instance, type InstanceDefinition } from './instance.js';
 
@@ -6264,7 +6264,7 @@ export class InstanceManager {
 `apps/whatsapp-service/src/publishers.ts`:
 
 ```ts
-import { createWebhookPublisher, type EventPublisher, type Logger } from '@connectors/core';
+import { createWebhookPublisher, type EventPublisher, type Logger } from '@talitman/core';
 import type { ServiceConfig } from './config.js';
 import type { InstanceDefinition } from './instance.js';
 
@@ -6354,7 +6354,7 @@ In `apps/whatsapp-service/src/server.ts`: replace the `InstanceManagerLike` inte
 
 - [ ] **Step 4: Run tests, typecheck, lint**
 
-Run: `pnpm --filter @connectors/whatsapp-service test && pnpm typecheck && pnpm lint`
+Run: `pnpm --filter @talitman/whatsapp-service test && pnpm typecheck && pnpm lint`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
@@ -6384,8 +6384,8 @@ Claude-Session: https://claude.ai/code/session_01UjULQEvZegHS99tGo4BBDk"
 `apps/whatsapp-service/src/routes/messages.test.ts`:
 
 ```ts
-import { MemoryStore, noopLogger } from '@connectors/core';
-import { createPinoLogger } from '@connectors/observability';
+import { MemoryStore, noopLogger } from '@talitman/core';
+import { createPinoLogger } from '@talitman/observability';
 import { describe, expect, it, vi } from 'vitest';
 import { loadServiceConfig } from '../config.js';
 import { InstanceManager } from '../instance-manager.js';
@@ -6470,8 +6470,8 @@ describe('POST /instances/:id/messages', () => {
 `apps/whatsapp-service/src/routes/media.test.ts`:
 
 ```ts
-import { MemoryStore, noopLogger } from '@connectors/core';
-import { createPinoLogger } from '@connectors/observability';
+import { MemoryStore, noopLogger } from '@talitman/core';
+import { createPinoLogger } from '@talitman/observability';
 import { describe, expect, it } from 'vitest';
 import { loadServiceConfig } from '../config.js';
 import { InstanceManager } from '../instance-manager.js';
@@ -6513,7 +6513,7 @@ describe('GET /instances/:id/media/:messageId', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `pnpm --filter @connectors/whatsapp-service test -- routes`
+Run: `pnpm --filter @talitman/whatsapp-service test -- routes`
 Expected: FAIL, modules not found (and a type error on the new `fetch` dep in `buildServer`).
 
 - [ ] **Step 3: Implement**
@@ -6522,7 +6522,7 @@ Expected: FAIL, modules not found (and a type error on the new `fetch` dep in `b
 
 ```ts
 import { Readable } from 'node:stream';
-import type { OutgoingMedia } from '@connectors/whatsapp';
+import type { OutgoingMedia } from '@talitman/whatsapp';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { HttpError, parseWith } from '../errors.js';
@@ -6627,7 +6627,7 @@ In `apps/whatsapp-service/src/server.ts`: add `fetch?: typeof fetch` to `ServerD
 
 - [ ] **Step 4: Run tests, typecheck, lint**
 
-Run: `pnpm --filter @connectors/whatsapp-service test && pnpm typecheck && pnpm lint`
+Run: `pnpm --filter @talitman/whatsapp-service test && pnpm typecheck && pnpm lint`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
@@ -6649,16 +6649,16 @@ Claude-Session: https://claude.ai/code/session_01UjULQEvZegHS99tGo4BBDk"
 
 **Interfaces:**
 - Consumes: everything from Tasks 16 to 18, `createWhatsAppConnector`, `FileStore`, `createPinoLogger`.
-- Produces: a runnable service (`pnpm --filter @connectors/whatsapp-service dev` and `docker compose up`).
+- Produces: a runnable service (`pnpm --filter @talitman/whatsapp-service dev` and `docker compose up`).
 
 - [ ] **Step 1: Write the bootstrap**
 
 `apps/whatsapp-service/src/index.ts`:
 
 ```ts
-import { FileStore } from '@connectors/core';
-import { createPinoLogger } from '@connectors/observability';
-import { createWhatsAppConnector } from '@connectors/whatsapp';
+import { FileStore } from '@talitman/core';
+import { createPinoLogger } from '@talitman/observability';
+import { createWhatsAppConnector } from '@talitman/whatsapp';
 import { loadServiceConfig } from './config.js';
 import { InstanceManager } from './instance-manager.js';
 import { createPublisherFactory } from './publishers.js';
@@ -6725,7 +6725,7 @@ WA_FETCH_LATEST_VERSION=false
 
 - [ ] **Step 2: Run the service locally and hit it**
 
-Run in one terminal: `pnpm build && pnpm --filter @connectors/whatsapp-service start` (uses `./data` inside the app folder).
+Run in one terminal: `pnpm build && pnpm --filter @talitman/whatsapp-service start` (uses `./data` inside the app folder).
 Run in another: `curl -s localhost:3000/health` then `curl -s -X POST localhost:3000/instances -H 'content-type: application/json' -d '{"id":"smoke","autoConnect":false}'` then `curl -s localhost:3000/instances/smoke`.
 Expected: `{"status":"ok","instances":{"total":0,"connected":0}}`, then a 201 instance view with `desiredState: "disconnected"`, then the same view. Stop the service with Ctrl+C; it logs "shutting down" and exits 0. Delete `apps/whatsapp-service/data` afterwards. Do not call connect here: pairing would contact WhatsApp, which the example (Task 20) covers.
 
@@ -6753,7 +6753,7 @@ COPY packages ./packages
 COPY apps ./apps
 COPY examples ./examples
 RUN pnpm install --frozen-lockfile
-RUN pnpm --filter @connectors/whatsapp-service... run build
+RUN pnpm --filter @talitman/whatsapp-service... run build
 RUN pnpm prune --prod
 
 FROM node:22-alpine AS runtime
@@ -6823,7 +6823,7 @@ Claude-Session: https://claude.ai/code/session_01UjULQEvZegHS99tGo4BBDk"
 
 ```json
 {
-  "name": "@connectors/example-whatsapp-basic",
+  "name": "@talitman/example-whatsapp-basic",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -6833,9 +6833,9 @@ Claude-Session: https://claude.ai/code/session_01UjULQEvZegHS99tGo4BBDk"
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@connectors/core": "workspace:*",
-    "@connectors/observability": "workspace:*",
-    "@connectors/whatsapp": "workspace:*",
+    "@talitman/core": "workspace:*",
+    "@talitman/observability": "workspace:*",
+    "@talitman/whatsapp": "workspace:*",
     "qrcode-terminal": "0.12.0"
   },
   "devDependencies": {
@@ -6862,9 +6862,9 @@ Claude-Session: https://claude.ai/code/session_01UjULQEvZegHS99tGo4BBDk"
 ```ts
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { FileStore } from '@connectors/core';
-import { createLogger } from '@connectors/observability';
-import { createWhatsAppConnector } from '@connectors/whatsapp';
+import { FileStore } from '@talitman/core';
+import { createLogger } from '@talitman/observability';
+import { createWhatsAppConnector } from '@talitman/whatsapp';
 import * as qrcode from 'qrcode-terminal';
 
 const DATA_DIR = process.env.DATA_DIR ?? './data';
@@ -6925,7 +6925,7 @@ process.on('SIGTERM', () => void stop());
 ```markdown
 # whatsapp-basic
 
-Minimal consumer of `@connectors/whatsapp` in package mode (no HTTP service).
+Minimal consumer of `@talitman/whatsapp` in package mode (no HTTP service).
 
 ## Run
 
@@ -6984,7 +6984,7 @@ Claude-Session: https://claude.ai/code/session_01UjULQEvZegHS99tGo4BBDk"
 
 Reusable, self-hosted integration connectors as TypeScript packages, with optional standalone services.
 
-Each external system (WhatsApp today; Telegram, Gmail, Slack, Notion later) is implemented once as a package that speaks the shared contracts in `@connectors/core`. Any application can import the package directly, or run the thin HTTP service around it.
+Each external system (WhatsApp today; Telegram, Gmail, Slack, Notion later) is implemented once as a package that speaks the shared contracts in `@talitman/core`. Any application can import the package directly, or run the thin HTTP service around it.
 
 ```mermaid
 flowchart LR
@@ -6993,8 +6993,8 @@ flowchart LR
     Hook[Your webhook endpoint]
   end
   subgraph packages
-    Core["@connectors/core<br/>contracts, stores, publishers"]
-    WA["@connectors/whatsapp<br/>normalize, reconnect, media"]
+    Core["@talitman/core<br/>contracts, stores, publishers"]
+    WA["@talitman/whatsapp<br/>normalize, reconnect, media"]
     Baileys[Baileys adapter]
   end
   Service["apps/whatsapp-service<br/>HTTP API + webhooks"]
@@ -7011,11 +7011,11 @@ flowchart LR
 
 | Path | Package | Purpose |
 |---|---|---|
-| `packages/core` | `@connectors/core` | Connector lifecycle, event contract, key-value storage (memory, filesystem), event publishers (webhook), errors, logging interface |
-| `packages/config` | `@connectors/config` | Zod-based environment loading with readable errors |
-| `packages/observability` | `@connectors/observability` | pino logger with default redaction of auth material and secrets |
-| `packages/whatsapp` | `@connectors/whatsapp` | Self-hosted WhatsApp connector (Baileys), normalized events, media download, text and media sending |
-| `apps/whatsapp-service` | `@connectors/whatsapp-service` | Small Fastify API around the connector with per-instance webhooks and Docker packaging |
+| `packages/core` | `@talitman/core` | Connector lifecycle, event contract, key-value storage (memory, filesystem), event publishers (webhook), errors, logging interface |
+| `packages/config` | `@talitman/config` | Zod-based environment loading with readable errors |
+| `packages/observability` | `@talitman/observability` | pino logger with default redaction of auth material and secrets |
+| `packages/whatsapp` | `@talitman/whatsapp` | Self-hosted WhatsApp connector (Baileys), normalized events, media download, text and media sending |
+| `apps/whatsapp-service` | `@talitman/whatsapp-service` | Small Fastify API around the connector with per-instance webhooks and Docker packaging |
 | `examples/whatsapp-basic` | | Package-mode walkthrough: pair, receive, download, reconnect |
 
 ## Why packages, not product code
@@ -7027,8 +7027,8 @@ A connector knows how to talk to one external system: sessions, reconnects, mess
 **Package mode.** Import the connector and handle events in-process. Best when you control the runtime and want no extra network hop.
 
 ```ts
-import { FileStore } from '@connectors/core';
-import { createWhatsAppConnector } from '@connectors/whatsapp';
+import { FileStore } from '@talitman/core';
+import { createWhatsAppConnector } from '@talitman/whatsapp';
 
 const connector = createWhatsAppConnector({ accountId: 'main', storage: { auth: new FileStore('./data') } });
 connector.onPairing((p) => console.log(p));
@@ -7081,7 +7081,7 @@ See `docs/adding-a-connector.md`. In short: a new `packages/<name>` implementing
 ```markdown
 # Privacy and data flow
 
-This document describes exactly what `@connectors/whatsapp` and `apps/whatsapp-service` store, keep in memory, and send over the network. Default behaviour is the most private option; everything else is opt-in.
+This document describes exactly what `@talitman/whatsapp` and `apps/whatsapp-service` store, keep in memory, and send over the network. Default behaviour is the most private option; everything else is opt-in.
 
 ## What is stored
 
@@ -7121,7 +7121,7 @@ No analytics, telemetry, crash reporting or hosted logging exist in this codebas
 
 ## Logging
 
-The logger from `@connectors/observability` redacts credentials, signal keys, media keys, secrets and authorization headers by default. Baileys receives a child logger at `warn` level (`providerLogLevel`); raise it only when debugging and be aware that Baileys debug output can include message content.
+The logger from `@talitman/observability` redacts credentials, signal keys, media keys, secrets and authorization headers by default. Baileys receives a child logger at `warn` level (`providerLogLevel`); raise it only when debugging and be aware that Baileys debug output can include message content.
 
 ## Opting into storing messages or media
 
@@ -7137,8 +7137,8 @@ The logger from `@connectors/observability` redacts credentials, signal keys, me
 ```markdown
 # Adding a connector
 
-1. **Create the package** `packages/<name>` by copying `packages/config`'s `package.json`, `tsconfig.json`, `tsconfig.build.json` and `vitest.config.ts`. Name it `@connectors/<name>`, depend on `@connectors/core` with `workspace:*`, export only from `src/index.ts`.
-2. **Implement the contracts** from `@connectors/core`:
+1. **Create the package** `packages/<name>` by copying `packages/config`'s `package.json`, `tsconfig.json`, `tsconfig.build.json` and `vitest.config.ts`. Name it `@talitman/<name>`, depend on `@talitman/core` with `workspace:*`, export only from `src/index.ts`.
+2. **Implement the contracts** from `@talitman/core`:
    - `Connector` (`name`, `accountId`, `connect`, `disconnect`, `getStatus`).
    - `EventSource` if the provider pushes events, `Pollable` if you must poll, both if needed. Do not implement what you do not need.
    - Emit `ConnectorEvent` objects built with `buildEventId`; keep `payload` normalized and provider-neutral, put the provider shape in `raw` only when the consumer asks.

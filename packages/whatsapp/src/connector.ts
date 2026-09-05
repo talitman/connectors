@@ -10,7 +10,7 @@ import {
   type EventHandler,
   type Logger,
   type Unsubscribe,
-} from '@connectors/core';
+} from '@talitman/core';
 import { createAuthStore } from './auth/auth-state.js';
 import type { ClientMessageBatch, RawMessage, WhatsAppClient } from './client/types.js';
 import { ConnectionManager } from './connection/state-machine.js';

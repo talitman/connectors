@@ -1,5 +1,5 @@
 {
-  "name": "@connectors/example-whatsapp-basic",
+  "name": "@talitman/example-whatsapp-basic",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -11,9 +11,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@connectors/core": "workspace:*",
-    "@connectors/observability": "workspace:*",
-    "@connectors/whatsapp": "workspace:*",
+    "@talitman/core": "workspace:*",
+    "@talitman/observability": "workspace:*",
+    "@talitman/whatsapp": "workspace:*",
     "qrcode-terminal": "0.12.0"
   },
   "devDependencies": {

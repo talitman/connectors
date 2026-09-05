@@ -42,16 +42,16 @@ importers:
 
   apps/whatsapp-service:
     dependencies:
-      '@connectors/config':
+      '@talitman/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@connectors/core':
+      '@talitman/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@connectors/observability':
+      '@talitman/observability':
         specifier: workspace:*
         version: link:../../packages/observability
-      '@connectors/whatsapp':
+      '@talitman/whatsapp':
         specifier: workspace:*
         version: link:../../packages/whatsapp
       fastify:
@@ -76,13 +76,13 @@ importers:
 
   examples/whatsapp-basic:
     dependencies:
-      '@connectors/core':
+      '@talitman/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@connectors/observability':
+      '@talitman/observability':
         specifier: workspace:*
         version: link:../../packages/observability
-      '@connectors/whatsapp':
+      '@talitman/whatsapp':
         specifier: workspace:*
         version: link:../../packages/whatsapp
       qrcode-terminal:
@@ -98,7 +98,7 @@ importers:
 
   packages/config:
     dependencies:
-      '@connectors/core':
+      '@talitman/core':
         specifier: workspace:*
         version: link:../core
       zod:
@@ -109,10 +109,10 @@ importers:
 
   packages/observability:
     dependencies:
-      '@connectors/config':
+      '@talitman/config':
         specifier: workspace:*
         version: link:../config
-      '@connectors/core':
+      '@talitman/core':
         specifier: workspace:*
         version: link:../core
       pino:
@@ -124,7 +124,7 @@ importers:
 
   packages/whatsapp:
     dependencies:
-      '@connectors/core':
+      '@talitman/core':
         specifier: workspace:*
         version: link:../core
       baileys:

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/require-await -- fake implements an async interface; methods resolve synchronously by default */
 import { Readable } from 'node:stream';
-import type { Unsubscribe } from '@connectors/core';
+import type { Unsubscribe } from '@talitman/core';
 import type { OutgoingMedia } from '../types.js';
 import { TypedEmitter } from '../client/emitter.js';
 import type {

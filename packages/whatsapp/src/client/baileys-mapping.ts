@@ -1,4 +1,4 @@
-import type { Logger } from '@connectors/core';
+import type { Logger } from '@talitman/core';
 import type { ResolvedOptions } from '../options.js';
 import type { OutgoingMedia, WhatsAppLogLevel } from '../types.js';
 

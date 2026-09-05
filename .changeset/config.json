@@ -7,5 +7,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@connectors/whatsapp-service", "@connectors/example-whatsapp-basic"]
+  "ignore": ["@talitman/whatsapp-service", "@talitman/example-whatsapp-basic"]
 }

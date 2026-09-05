@@ -1,5 +1,5 @@
 import { Readable, Transform } from 'node:stream';
-import type { OutgoingMedia } from '@connectors/whatsapp';
+import type { OutgoingMedia } from '@talitman/whatsapp';
 import { z } from 'zod';
 import { HttpError, parseWith } from '../errors.js';
 import type { InstanceManager } from '../instance-manager.js';

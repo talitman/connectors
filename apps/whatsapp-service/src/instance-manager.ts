@@ -5,8 +5,8 @@ import {
   type EventPublisher,
   type KeyValueStore,
   type Logger,
-} from '@connectors/core';
-import type { PairingMethod, WhatsAppConnector } from '@connectors/whatsapp';
+} from '@talitman/core';
+import type { PairingMethod, WhatsAppConnector } from '@talitman/whatsapp';
 import { ConflictError, NotFoundError, ValidationError } from './errors.js';
 import { Instance, type InstanceDefinition } from './instance.js';
 

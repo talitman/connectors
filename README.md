@@ -4,7 +4,7 @@
 
 Reusable, self-hosted integration connectors as TypeScript packages, with optional standalone services.
 
-Each external system (WhatsApp today; Telegram, Gmail, Slack, Notion later) is implemented once as a package that speaks the shared contracts in `@connectors/core`. Any application can import the package directly, or run the thin HTTP service around it.
+Each external system (WhatsApp today; Telegram, Gmail, Slack, Notion later) is implemented once as a package that speaks the shared contracts in `@talitman/core`. Any application can import the package directly, or run the thin HTTP service around it.
 
 ```mermaid
 flowchart LR
@@ -13,8 +13,8 @@ flowchart LR
     Hook[Your webhook endpoint]
   end
   subgraph packages
-    Core["@connectors/core<br/>contracts, stores, publishers"]
-    WA["@connectors/whatsapp<br/>normalize, reconnect, media"]
+    Core["@talitman/core<br/>contracts, stores, publishers"]
+    WA["@talitman/whatsapp<br/>normalize, reconnect, media"]
     Baileys[Baileys adapter]
   end
   Service["apps/whatsapp-service<br/>HTTP API + webhooks"]
@@ -29,14 +29,14 @@ flowchart LR
 
 ## Packages
 
-| Path                      | Package                        | Purpose                                                                                                                            |
-| ------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/core`           | `@connectors/core`             | Connector lifecycle, event contract, key-value storage (memory, filesystem), event publishers (webhook), errors, logging interface |
-| `packages/config`         | `@connectors/config`           | Zod-based environment loading with readable errors                                                                                 |
-| `packages/observability`  | `@connectors/observability`    | pino logger with default redaction of auth material and secrets                                                                    |
-| `packages/whatsapp`       | `@connectors/whatsapp`         | Self-hosted WhatsApp connector (Baileys), normalized events, media download, text and media sending                                |
-| `apps/whatsapp-service`   | `@connectors/whatsapp-service` | Small Fastify API around the connector with per-instance webhooks and Docker packaging                                             |
-| `examples/whatsapp-basic` |                                | Package-mode walkthrough: pair, receive, download, reconnect                                                                       |
+| Path                      | Package                      | Purpose                                                                                                                            |
+| ------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/core`           | `@talitman/core`             | Connector lifecycle, event contract, key-value storage (memory, filesystem), event publishers (webhook), errors, logging interface |
+| `packages/config`         | `@talitman/config`           | Zod-based environment loading with readable errors                                                                                 |
+| `packages/observability`  | `@talitman/observability`    | pino logger with default redaction of auth material and secrets                                                                    |
+| `packages/whatsapp`       | `@talitman/whatsapp`         | Self-hosted WhatsApp connector (Baileys), normalized events, media download, text and media sending                                |
+| `apps/whatsapp-service`   | `@talitman/whatsapp-service` | Small Fastify API around the connector with per-instance webhooks and Docker packaging                                             |
+| `examples/whatsapp-basic` |                              | Package-mode walkthrough: pair, receive, download, reconnect                                                                       |
 
 ## Why packages, not product code
 
@@ -47,8 +47,8 @@ A connector knows how to talk to one external system: sessions, reconnects, mess
 **Package mode.** Import the connector and handle events in-process. Best when you control the runtime and want no extra network hop.
 
 ```ts
-import { FileStore } from '@connectors/core';
-import { createWhatsAppConnector } from '@connectors/whatsapp';
+import { FileStore } from '@talitman/core';
+import { createWhatsAppConnector } from '@talitman/whatsapp';
 
 const connector = createWhatsAppConnector({
   accountId: 'main',
@@ -75,11 +75,11 @@ Docker: `docker compose up --build` starts the service on port 3000 with auth st
 
 ## Installing from npm
 
-The packages are published under the `@connectors` scope and are MIT licensed.
+The packages are published under the `@talitman` scope and are MIT licensed.
 
 ```bash
-pnpm add @connectors/whatsapp        # pulls in @connectors/core
-pnpm add @connectors/config @connectors/observability   # optional helpers
+pnpm add @talitman/whatsapp        # pulls in @talitman/core
+pnpm add @talitman/config @talitman/observability   # optional helpers
 ```
 
 Versions follow [changesets](.changeset/README.md): every change to a published package ships with a changeset, and merging the generated "Version Packages" pull request publishes to npm with provenance.

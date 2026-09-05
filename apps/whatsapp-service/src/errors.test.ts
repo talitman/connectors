@@ -1,5 +1,5 @@
-import { AuthError, ConfigError, ConnectorError } from '@connectors/core';
-import { MediaUnavailableError, NotConnectedError } from '@connectors/whatsapp';
+import { AuthError, ConfigError, ConnectorError } from '@talitman/core';
+import { MediaUnavailableError, NotConnectedError } from '@talitman/whatsapp';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { ConflictError, NotFoundError, ValidationError, parseWith, toHttpError } from './errors.js';

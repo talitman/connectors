@@ -1,6 +1,6 @@
 import { Readable } from 'node:stream';
 import { describe, expect, it, vi } from 'vitest';
-import type { Logger } from '@connectors/core';
+import type { Logger } from '@talitman/core';
 import { browserTuple, toOutgoingContent, toProviderLogger } from './baileys-mapping.js';
 
 function spyLogger(): Logger & { calls: string[] } {

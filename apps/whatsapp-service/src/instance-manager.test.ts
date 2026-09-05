@@ -4,7 +4,7 @@ import {
   noopLogger,
   type ConnectorEvent,
   type EventPublisher,
-} from '@connectors/core';
+} from '@talitman/core';
 import { describe, expect, it } from 'vitest';
 import { InstanceManager, type InstanceDefinition } from './instance-manager.js';
 import { FakeWhatsAppConnector } from './testing/fake-connector.js';

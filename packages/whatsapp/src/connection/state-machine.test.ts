@@ -1,4 +1,4 @@
-import { MemoryStore, noopLogger } from '@connectors/core';
+import { MemoryStore, noopLogger } from '@talitman/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createAuthStore } from '../auth/auth-state.js';
 import { resolveOptions } from '../options.js';

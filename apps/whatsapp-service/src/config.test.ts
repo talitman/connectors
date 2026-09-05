@@ -1,4 +1,4 @@
-import { ConfigError } from '@connectors/core';
+import { ConfigError } from '@talitman/core';
 import { describe, expect, it } from 'vitest';
 import { loadServiceConfig } from './config.js';
 

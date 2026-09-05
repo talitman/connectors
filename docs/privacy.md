@@ -1,6 +1,6 @@
 # Privacy and data flow
 
-This document describes exactly what `@connectors/whatsapp` and `apps/whatsapp-service` store, keep in memory, and send over the network. Default behaviour is the most private option; everything else is opt-in.
+This document describes exactly what `@talitman/whatsapp` and `apps/whatsapp-service` store, keep in memory, and send over the network. Default behaviour is the most private option; everything else is opt-in.
 
 ## What is stored
 
@@ -42,7 +42,7 @@ No analytics, telemetry, crash reporting or hosted logging exist in this codebas
 
 ## Logging
 
-The logger from `@connectors/observability` redacts credentials, signal keys, media keys, secrets and authorization headers by default. Baileys receives a child logger at `warn` level (`providerLogLevel`); raise it only when debugging and be aware that Baileys debug output can include message content.
+The logger from `@talitman/observability` redacts credentials, signal keys, media keys, secrets and authorization headers by default. Baileys receives a child logger at `warn` level (`providerLogLevel`); raise it only when debugging and be aware that Baileys debug output can include message content.
 
 ## Opting into storing messages or media
 

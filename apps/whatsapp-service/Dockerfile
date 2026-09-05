@@ -6,7 +6,7 @@ COPY packages ./packages
 COPY apps ./apps
 COPY examples ./examples
 RUN pnpm install --frozen-lockfile
-RUN pnpm --filter @connectors/whatsapp-service... run build
+RUN pnpm --filter @talitman/whatsapp-service... run build
 # `pnpm prune --prod` and the `pnpm install --prod --frozen-lockfile` fallback both abort
 # under pnpm 11 with ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY (no TTY in a Docker build
 # layer to confirm purging node_modules); pnpm's own error message names CI=true as the fix.

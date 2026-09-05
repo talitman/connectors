@@ -1,4 +1,4 @@
-import { AuthError } from '@connectors/core';
+import { AuthError } from '@talitman/core';
 import { describe, expect, it } from 'vitest';
 import { ConnectionReplacedError, mapDisconnectError, statusCodeOf } from './errors.js';
 

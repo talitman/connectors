@@ -7,7 +7,7 @@ import type {
   KeyValueStore,
   Logger,
   Unsubscribe,
-} from '@connectors/core';
+} from '@talitman/core';
 
 export type WhatsAppLogLevel = 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace' | 'silent';
 
