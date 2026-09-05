@@ -34,6 +34,8 @@ import type {
   WhatsAppMessageEvent,
 } from './types.js';
 
+const MAX_PENDING_OWN_SENDS = 1000;
+
 export interface ConnectorInternals {
   clientFactory: (ctx: { logger: Logger; options: ResolvedOptions }) => WhatsAppClient;
   random?: () => number;
@@ -51,6 +53,8 @@ class WhatsAppConnectorImpl implements WhatsAppConnector {
   /** Monotonic suffix so two status transitions in the same millisecond get distinct event ids. */
   private connectionSeq = 0;
   private duplicatesDropped = 0;
+  /** Ids of messages this connector sent that the provider has not yet echoed back. */
+  private readonly ownSentIds = new Set<string>();
 
   constructor(
     private readonly options: ResolvedOptions,
@@ -180,16 +184,36 @@ class WhatsAppConnectorImpl implements WhatsAppConnector {
   private toSent(raw: RawMessage, jid: string): SentMessage {
     const messageId = raw.key.id;
     if (!messageId) throw nonRetryable('Provider returned a message without an id', 'SEND_FAILED');
+    this.rememberOwnSend(messageId);
     return { messageId, chatId: jid, timestamp: timestampOf(raw) };
+  }
+
+  private rememberOwnSend(messageId: string): void {
+    this.ownSentIds.add(messageId);
+    // Bound the set in case the provider never echoes a send (e.g. emitOwnEvents disabled upstream).
+    while (this.ownSentIds.size > MAX_PENDING_OWN_SENDS) {
+      const oldest = this.ownSentIds.values().next().value;
+      if (oldest === undefined) break;
+      this.ownSentIds.delete(oldest);
+    }
   }
 
   private async handleBatch(batch: ClientMessageBatch): Promise<void> {
     // A socket created by an in-flight start() can outlive a disconnect()/logout(); ignore it.
     if (this.manager.isStopped()) return;
-    if (batch.type === 'append' && !this.options.includeHistory) return;
-    for (const raw of batch.messages) {
+    // The provider echoes this connector's own sends as 'append' batches, the same type it uses
+    // for history sync. Without includeHistory, let through only the echoes of our own sends.
+    const messages =
+      batch.type === 'append' && !this.options.includeHistory
+        ? batch.messages.filter(
+            (raw) =>
+              raw.key.id !== undefined && raw.key.id !== null && this.ownSentIds.has(raw.key.id),
+          )
+        : batch.messages;
+    for (const raw of messages) {
       const id = raw.key.id;
       if (!id) continue;
+      this.ownSentIds.delete(id);
       if (this.dedupe.isDuplicate(`${this.accountId}:${id}`)) {
         this.duplicatesDropped += 1;
         this.logger.debug({ messageId: id }, 'duplicate message dropped');

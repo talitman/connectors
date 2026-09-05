@@ -194,6 +194,26 @@ describe('WhatsApp connector', () => {
     expect(b.messages()).toHaveLength(0);
   });
 
+  it('emits message.sent for messages sent through the connector even though the provider reports them as append', async () => {
+    const { client, connector, messages } = await connected();
+    const sent = await connector.sendText('972501234567', 'hi');
+    const ownEcho: RawMessage = {
+      key: { remoteJid: '972501234567@s.whatsapp.net', fromMe: true, id: sent.messageId },
+      message: { conversation: 'hi' },
+      messageTimestamp: 1_700_000_000,
+    };
+    // The provider echoes the connector's own send as an 'append' batch, alongside history noise.
+    client.emitMessages([text('H1', { fromMe: true }), ownEcho], 'append');
+    await flush();
+    expect(messages().map((e) => [e.type, e.externalId])).toEqual([
+      ['message.sent', sent.messageId],
+    ]);
+    // A second echo of the same id is a duplicate, not a second event.
+    client.emitMessages([ownEcho], 'append');
+    await flush();
+    expect(messages()).toHaveLength(1);
+  });
+
   it('isolates subscriber failures', async () => {
     const { client, connector, messages } = await connected();
     connector.subscribe(() => {
