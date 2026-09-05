@@ -4,8 +4,25 @@
   "description": "Self-hosted WhatsApp connector (Baileys) exposing normalized events",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/talitman/connectors.git",
+    "directory": "packages/whatsapp"
+  },
+  "homepage": "https://github.com/talitman/connectors/tree/main/packages/whatsapp#readme",
+  "bugs": "https://github.com/talitman/connectors/issues",
+  "keywords": [
+    "connectors",
+    "integration",
+    "whatsapp",
+    "baileys"
+  ],
   "engines": {
     "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "exports": {
     ".": {

@@ -73,6 +73,17 @@ pnpm dev        # watches packages and runs the service with tsx
 
 Docker: `docker compose up --build` starts the service on port 3000 with auth state in the named volume `whatsapp-data`; use `docker compose down -v` to wipe it.
 
+## Installing from npm
+
+The packages are published under the `@connectors` scope and are MIT licensed.
+
+```bash
+pnpm add @connectors/whatsapp        # pulls in @connectors/core
+pnpm add @connectors/config @connectors/observability   # optional helpers
+```
+
+Versions follow [changesets](.changeset/README.md): every change to a published package ships with a changeset, and merging the generated "Version Packages" pull request publishes to npm with provenance.
+
 ## How WhatsApp pairing works
 
 1. `connect()` opens a WhatsApp Web session with fresh keys.

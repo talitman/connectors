@@ -4,8 +4,23 @@
   "description": "Shared contracts for connectors: lifecycle, events, storage, publishing, errors, logging",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/talitman/connectors.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/talitman/connectors/tree/main/packages/core#readme",
+  "bugs": "https://github.com/talitman/connectors/issues",
+  "keywords": [
+    "connectors",
+    "integration"
+  ],
   "engines": {
     "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "exports": {
     ".": {

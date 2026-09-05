@@ -13,9 +13,13 @@
     "dev": "turbo run dev",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
-    "clean": "turbo run clean"
+    "clean": "turbo run clean",
+    "changeset": "changeset",
+    "version": "changeset version && pnpm install --lockfile-only && pnpm format",
+    "release": "pnpm build && changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "3.0.2",
     "@types/node": "26.4.1",
     "eslint": "10.10.0",
     "eslint-config-prettier": "10.1.8",

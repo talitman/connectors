@@ -4,8 +4,23 @@
   "description": "Structured logging with secret redaction",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/talitman/connectors.git",
+    "directory": "packages/observability"
+  },
+  "homepage": "https://github.com/talitman/connectors/tree/main/packages/observability#readme",
+  "bugs": "https://github.com/talitman/connectors/issues",
+  "keywords": [
+    "connectors",
+    "integration"
+  ],
   "engines": {
     "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "exports": {
     ".": {
