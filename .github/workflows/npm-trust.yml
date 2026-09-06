@@ -34,6 +34,6 @@ jobs:
           set -eu
           for pkg in ${{ inputs.packages }}; do
             echo "== $pkg"
-            npm trust github "$pkg" --file release.yml --repo "${{ github.repository }}" --yes
+            npm trust github "$pkg" --file release.yml --repo "${{ github.repository }}" --allow-publish --yes
             npm trust list "$pkg"
           done
